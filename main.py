@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Annotated
 
+from src.scraper import scrape_url
+
 app = FastAPI()
 
 origins = [
@@ -33,4 +35,8 @@ async def create_file(image: UploadFile = File(...)):
     with save_path.open("wb") as buffer:
         shutil.copyfileobj(image.file, buffer)
 
-    return {"message": image.filename}
+    return {"data": {"image": image}}
+
+@app.post("/scrape/{url}")
+def scrape_forum(url):
+    return {"data": scrape_url(url)}
