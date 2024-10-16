@@ -39,6 +39,7 @@ def get_topics(url):
         for image_wrapper in soup.find_all('div', class_="lightbox-wrapper"):
             print(image_wrapper.find('img').get('src'))
             topic_image_sources.append(image_wrapper.find('img').get('src'))
+            
         print()
         print("found following relevant images: ")
         print(topic_image_sources)
