@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import uuid
+import os
 
 BASE_URL = "https://forum.cannabisanbauen.net"
 
@@ -52,22 +53,46 @@ def get_topics(url):
         topic_attributes[str(id)]['topic_id'] = str(id)
 
         results.append(topic_attributes[str(id)])
-        if len(results) > 5:
+        if len(results) > 1:
             break
     browser.quit()
 
 
     print()
     print("printing results:")
-    print(results)
+    #print(results)
     print()
     return results
 
+# Function to download an image
+def download_image(url, folder):
+    response = requests.get(url)
+    if response.status_code == 200:
+        # Extract the image name from the URL
+        image_name = url.split("/")[-1]
+        # Create the folder if it doesn't exist
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        # Save the image to the specified folder
+        with open(os.path.join(folder, image_name), 'wb') as f:
+            f.write(response.content)
+        print(f"Downloaded: {image_name}")
+    else:
+        print(f"Failed to retrieve image from {url}")
 
 def scrape_url(query):
     url = BASE_URL + "/search?expanded=true&q=" + query.lower().replace(" ", "%20")
     print('query forum with search params. url: ' + url)
 
     results = get_topics(url)
+    imageLinks = []
+
+    for result in results:
+        for link in result['topic_images']:
+           imageLinks.append(link)
+
+    for link in imageLinks:
+        download_image(link, 'cache')
+        
 
     return results
