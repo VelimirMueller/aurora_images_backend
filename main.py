@@ -37,7 +37,3 @@ async def create_file(image: UploadFile = File(...)):
         shutil.copyfileobj(image.file, buffer)
 
     return {"data": {"image": image}}
-
-@app.post("/scrape/{url}")
-def scrape_forum(url):
-    return {"data": scrape_url(url)}
