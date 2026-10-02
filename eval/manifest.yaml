@@ -1,0 +1,550 @@
+source: Wikimedia Commons, free licenses only (scripts/build_eval_manifest.py)
+images:
+- title: File:Human–canine friendship - girl hugging her dog tightly at golden hour in Laos.jpg
+  page: https://commons.wikimedia.org/wiki/File:Human%E2%80%93canine_friendship_-_girl_hugging_her_dog_tightly_at_golden_hour_in_Laos.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Human%E2%80%93canine_friendship_-_girl_hugging_her_dog_tightly_at_golden_hour_in_Laos.jpg/960px-Human%E2%80%93canine_friendship_-_girl_hugging_her_dog_tightly_at_golden_hour_in_Laos.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Basile Morin
+  sha256: 47c3c9667dee4bbe9d3e14d03e5d3af75560fd3a5002aeff7758d9c44922c79c
+  query: dog portrait
+  topics:
+  - animal
+  - person
+- title: File:DSC09611a Search and Rescue Dog, Austrian Red Cross Perchtoldsdorf, 2024-10.jpg
+  page: https://commons.wikimedia.org/wiki/File:DSC09611a_Search_and_Rescue_Dog,_Austrian_Red_Cross_Perchtoldsdorf,_2024-10.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/DSC09611a_Search_and_Rescue_Dog%2C_Austrian_Red_Cross_Perchtoldsdorf%2C_2024-10.jpg/960px-DSC09611a_Search_and_Rescue_Dog%2C_Austrian_Red_Cross_Perchtoldsdorf%2C_2024-10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 4.0
+  author: Aciarium
+  sha256: c0ac0d25a9527a078489ea6eaf998e192ab2a01eb0a19a65f91805ed3066752c
+  query: dog portrait
+  topics:
+  - animal
+- title: File:Cat November 2010-1a.jpg
+  page: https://commons.wikimedia.org/wiki/File:Cat_November_2010-1a.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Cat_November_2010-1a.jpg/960px-Cat_November_2010-1a.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Alvesgaspar
+  sha256: 9b46595fdf92b4a91d380e6b94721da5a68ec18ace40f4829a29db357d79bda5
+  query: domestic cat
+  topics:
+  - animal
+- title: File:Felis catus-cat on snow.jpg
+  page: https://commons.wikimedia.org/wiki/File:Felis_catus-cat_on_snow.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Felis_catus-cat_on_snow.jpg/960px-Felis_catus-cat_on_snow.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Von.grzanka
+  sha256: a34ee05fe8cb1badd2d7ffbeec2257c79f3683bd3ea0aef2b4ec709e42878734
+  query: domestic cat
+  topics:
+  - animal
+- title: File:Cow on pasture, Ehrenbach.jpg
+  page: https://commons.wikimedia.org/wiki/File:Cow_on_pasture,_Ehrenbach.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Cow_on_pasture%2C_Ehrenbach.jpg/960px-Cow_on_pasture%2C_Ehrenbach.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC0
+  author: Gerda Arendt
+  sha256: fd27cfba64c3f248cbad413fa722c4bca625cff69064525fc89288c37e1abbdd
+  query: cow pasture
+  topics:
+  - animal
+- title: File:Ara ararauna Luc Viatour.jpg
+  page: https://commons.wikimedia.org/wiki/File:Ara_ararauna_Luc_Viatour.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Ara_ararauna_Luc_Viatour.jpg/960px-Ara_ararauna_Luc_Viatour.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 2.0
+  author: Luc Viatour
+  sha256: d6709a4780e300a2d0e56a19a4ece3b4718ab7e2c78e2d5d2fe73c1440825754
+  query: parrot
+  topics:
+  - animal
+- title: File:Orange-winged parrots (Amazona amazonica tobagensis).jpg
+  page: https://commons.wikimedia.org/wiki/File:Orange-winged_parrots_(Amazona_amazonica_tobagensis).jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Orange-winged_parrots_%28Amazona_amazonica_tobagensis%29.jpg/960px-Orange-winged_parrots_%28Amazona_amazonica_tobagensis%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Charles J. Sharp
+  sha256: e9827f0d6002c33e14d3871d20c181c4c599cd08bd00b07d5b3636a75af2c074
+  query: parrot
+  topics:
+  - animal
+- title: File:Peacock butterfly (Aglais io) 2.jpg
+  page: https://commons.wikimedia.org/wiki/File:Peacock_butterfly_(Aglais_io)_2.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/Peacock_butterfly_%28Aglais_io%29_2.jpg/960px-Peacock_butterfly_%28Aglais_io%29_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Charles J. Sharp
+  sha256: ade9d663b9779249ef3d4aa94ab74b883202002a7861ce5ce1d82d50059d43a6
+  query: butterfly on flower
+  topics:
+  - animal
+- title: File:Portrait of a Man, Said to be Christopher Columbus.jpg
+  page: https://commons.wikimedia.org/wiki/File:Portrait_of_a_Man,_Said_to_be_Christopher_Columbus.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/Portrait_of_a_Man%2C_Said_to_be_Christopher_Columbus.jpg/960px-Portrait_of_a_Man%2C_Said_to_be_Christopher_Columbus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: Sebastiano del Piombo
+  sha256: e20c82fe67efe93348236d661b3c3978b5217c811ed4da8ec9b6872457913d93
+  query: portrait photograph of a man
+  topics:
+  - person
+  - art
+- title: File:Antonello da Messina - Portrait of a Man - National Gallery London.jpg
+  page: https://commons.wikimedia.org/wiki/File:Antonello_da_Messina_-_Portrait_of_a_Man_-_National_Gallery_London.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Antonello_da_Messina_-_Portrait_of_a_Man_-_National_Gallery_London.jpg/960px-Antonello_da_Messina_-_Portrait_of_a_Man_-_National_Gallery_London.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: Antonello da Messina
+  sha256: 1622507e252d8de649b4bf665718b6990082b01274b53b774f7d69a56228d998
+  query: portrait photograph of a man
+  topics:
+  - person
+  - art
+- title: File:這群人.JPG
+  page: https://commons.wikimedia.org/wiki/File:%E9%80%99%E7%BE%A4%E4%BA%BA.JPG
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/%E9%80%99%E7%BE%A4%E4%BA%BA.JPG/960px-%E9%80%99%E7%BE%A4%E4%BA%BA.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Thewatcher2271
+  sha256: 7762cb825dbb260f2ae60e3cfff2cf8d5dd01f917d3a170f1aa5dd2cc3df6e91
+  query: group of people
+  topics:
+  - person
+- title: File:Photographer taking a group photograph of smiling students in front of the Tokyo station, Marunouchi, Japan.jpg
+  page: https://commons.wikimedia.org/wiki/File:Photographer_taking_a_group_photograph_of_smiling_students_in_front_of_the_Tokyo_station,_Marunouchi,_Japan.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Photographer_taking_a_group_photograph_of_smiling_students_in_front_of_the_Tokyo_station%2C_Marunouchi%2C_Japan.jpg/960px-Photographer_taking_a_group_photograph_of_smiling_students_in_front_of_the_Tokyo_station%2C_Marunouchi%2C_Japan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Basile Morin
+  sha256: d334019a09e156098f7933d51901bc99e51c39c41e799ac9e1577c6d29833ad7
+  query: group of people
+  topics:
+  - person
+- title: File:Deelerwoud, 09-05-2024 (d.j.b.) 16.jpg
+  page: https://commons.wikimedia.org/wiki/File:Deelerwoud,_09-05-2024_(d.j.b.)_16.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Deelerwoud%2C_09-05-2024_%28d.j.b.%29_16.jpg/960px-Deelerwoud%2C_09-05-2024_%28d.j.b.%29_16.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Dominicus Johannes Bergsma
+  sha256: 3b814ffd1fc711ad759c30006b9610af8f4c4dda00f0b38fac3cdc72b29c4a85
+  query: oak tree
+  topics:
+  - plant
+  - landscape
+- title: File:Eik met uitgebroken kroon. Locatie, Kroondomein Het Loo. 25-12-2020 (d.j.b.) 02.jpg
+  page: https://commons.wikimedia.org/wiki/File:Eik_met_uitgebroken_kroon._Locatie,_Kroondomein_Het_Loo._25-12-2020_(d.j.b.)_02.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Eik_met_uitgebroken_kroon._Locatie%2C_Kroondomein_Het_Loo._25-12-2020_%28d.j.b.%29_02.jpg/960px-Eik_met_uitgebroken_kroon._Locatie%2C_Kroondomein_Het_Loo._25-12-2020_%28d.j.b.%29_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Dominicus Johannes Bergsma
+  sha256: 4fcd63e7f7fb418f2c7c98de89e6b55cb88524ee38e87e6ec888a09055b8a948
+  query: oak tree
+  topics:
+  - plant
+  - landscape
+- title: File:Sunflower head 2026 G1.jpg
+  page: https://commons.wikimedia.org/wiki/File:Sunflower_head_2026_G1.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Sunflower_head_2026_G1.jpg/960px-Sunflower_head_2026_G1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 4.0
+  author: George Chernilevsky
+  sha256: f2de8a7ca8964926b5bbe976bf7651eefd93a819b4a988f31b4436d400817f3b
+  query: sunflower
+  topics:
+  - plant
+- title: File:Sunflower head 2015 G1.jpg
+  page: https://commons.wikimedia.org/wiki/File:Sunflower_head_2015_G1.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sunflower_head_2015_G1.jpg/960px-Sunflower_head_2015_G1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: George Chernilevsky
+  sha256: 74760d6f9b1b8593859be3c1726246b7e702f18b037a60c3f6bd9ec886ec6b6d
+  query: sunflower
+  topics:
+  - plant
+- title: File:Vegetarian Pizza.jpg
+  page: https://commons.wikimedia.org/wiki/File:Vegetarian_Pizza.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/Vegetarian_Pizza.jpg/960px-Vegetarian_Pizza.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Petar Milošević
+  sha256: 92f0993c093f3229f23fc2132df27b0aaad462ef9cf5c63a72854731c265224d
+  query: pizza
+  topics:
+  - food and drink
+- title: File:Eq it-na pizza-margherita sep2005 sml.jpg
+  page: https://commons.wikimedia.org/wiki/File:Eq_it-na_pizza-margherita_sep2005_sml.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Eq_it-na_pizza-margherita_sep2005_sml.jpg/960px-Eq_it-na_pizza-margherita_sep2005_sml.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Valerio Capello at English Wikipedia
+  sha256: 66d349bd160e5c4600576c448408083788644b157d6fc50c00f1db4ff1aaeae4
+  query: pizza
+  topics:
+  - food and drink
+- title: File:Parked bicycle with graffitied building facade and doors in Amsterdam.jpg
+  page: https://commons.wikimedia.org/wiki/File:Parked_bicycle_with_graffitied_building_facade_and_doors_in_Amsterdam.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Parked_bicycle_with_graffitied_building_facade_and_doors_in_Amsterdam.jpg/960px-Parked_bicycle_with_graffitied_building_facade_and_doors_in_Amsterdam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Basile Morin
+  sha256: 1c995f2eb56eff9ff7d97c987ffdd0e997042cdc84b128448ea877d97fea74ce
+  query: bicycle
+  topics:
+  - vehicle
+  - art
+- title: File:Bicycle reflections.jpg
+  page: https://commons.wikimedia.org/wiki/File:Bicycle_reflections.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Bicycle_reflections.jpg/960px-Bicycle_reflections.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Tomascastelazo
+  sha256: 292233d716600bdb4e13577eb6d953f359208c3166715ed55885476418143b65
+  query: bicycle
+  topics:
+  - vehicle
+  - person
+- title: File:Airliner Flying Over Las Vegas Neighborhood.jpg
+  page: https://commons.wikimedia.org/wiki/File:Airliner_Flying_Over_Las_Vegas_Neighborhood.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Airliner_Flying_Over_Las_Vegas_Neighborhood.jpg/960px-Airliner_Flying_Over_Las_Vegas_Neighborhood.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Noah Wulf
+  sha256: 64dc82ef18271653e543e463912fde6b7e8381bca46769de982e7c37b8e20781
+  query: airliner
+  topics:
+  - vehicle
+- title: File:SNCB Desiro ML (Class AM08 08197) at Antwerp Central Station level -2 platform 22 looking towards the main hall
+    (DSCF4782).jpg
+  page: https://commons.wikimedia.org/wiki/File:SNCB_Desiro_ML_(Class_AM08_08197)_at_Antwerp_Central_Station_level_-2_platform_22_looking_towards_the_main_hall_(DSCF4782).jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/SNCB_Desiro_ML_%28Class_AM08_08197%29_at_Antwerp_Central_Station_level_-2_platform_22_looking_towards_the_main_hall_%28DSCF4782%29.jpg/960px-SNCB_Desiro_ML_%28Class_AM08_08197%29_at_Antwerp_Central_Station_level_-2_platform_22_looking_towards_the_main_hall_%28DSCF4782%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 4.0
+  author: Trougnouf
+  sha256: 57bfffd5e15fa58d2d02bfff7d0dd138385349a1a2313bd9d51a0e5daef861c6
+  query: passenger train
+  topics:
+  - vehicle
+- title: File:Gusev passenger train 2025-05 5369.JPG
+  page: https://commons.wikimedia.org/wiki/File:Gusev_passenger_train_2025-05_5369.JPG
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Gusev_passenger_train_2025-05_5369.JPG/960px-Gusev_passenger_train_2025-05_5369.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 4.0
+  author: Artyom Svetlov
+  sha256: 8a5f980b7ac6907c89b40fc1eb1bb8d1a515ac11054ce14b4023dd5c653d9b9d
+  query: passenger train
+  topics:
+  - vehicle
+- title: File:Zöbigker Hafen, Cospudener See, Markkleeberg, 1709102012, ako.jpg
+  page: https://commons.wikimedia.org/wiki/File:Z%C3%B6bigker_Hafen,_Cospudener_See,_Markkleeberg,_1709102012,_ako.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Z%C3%B6bigker_Hafen%2C_Cospudener_See%2C_Markkleeberg%2C_1709102012%2C_ako.jpg/960px-Z%C3%B6bigker_Hafen%2C_Cospudener_See%2C_Markkleeberg%2C_1709102012%2C_ako.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Ansgar Koreng
+  sha256: 453bf5b3f0ecc95d6118ad3fdebf43f714f8f7ec5d17c86e6cbe740e199e0a9d
+  query: sailing boat
+  topics:
+  - vehicle
+  - landscape
+- title: File:Zoutelande (NL), Strand, Blick auf die Nordsee -- 2022 -- 4984.jpg
+  page: https://commons.wikimedia.org/wiki/File:Zoutelande_(NL),_Strand,_Blick_auf_die_Nordsee_--_2022_--_4984.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Zoutelande_%28NL%29%2C_Strand%2C_Blick_auf_die_Nordsee_--_2022_--_4984.jpg/960px-Zoutelande_%28NL%29%2C_Strand%2C_Blick_auf_die_Nordsee_--_2022_--_4984.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Dietmar Rabich
+  sha256: e60c7091322a0e94f6ae0de94d295dc445b0ef9ff98b280133c1b06f2d82aeb1
+  query: sailing boat
+  topics:
+  - vehicle
+  - landscape
+- title: File:Exterior of the House of the Epidii (Pompeii).jpg
+  page: https://commons.wikimedia.org/wiki/File:Exterior_of_the_House_of_the_Epidii_(Pompeii).jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Exterior_of_the_House_of_the_Epidii_%28Pompeii%29.jpg/960px-Exterior_of_the_House_of_the_Epidii_%28Pompeii%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Commonists
+  sha256: 4da43ae5e2fb30b7d30a85ca1c1dc645a83d30c3b86c4d8b46ba46a95e8a45bd
+  query: house exterior
+  topics:
+  - building and structure
+- title: File:Old house typical of the island of Margarita.jpg
+  page: https://commons.wikimedia.org/wiki/File:Old_house_typical_of_the_island_of_Margarita.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Old_house_typical_of_the_island_of_Margarita.jpg/960px-Old_house_typical_of_the_island_of_Margarita.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC0
+  author: Wilfredor
+  sha256: 52d0996bd844205e11e9a309c4aee8fca55af0c7d1620e167651e7b77fc69a4d
+  query: house exterior
+  topics:
+  - building and structure
+  - furniture
+- title: File:Bell tower of Church of Beheading of John the Baptist in Moscow.jpg
+  page: https://commons.wikimedia.org/wiki/File:Bell_tower_of_Church_of_Beheading_of_John_the_Baptist_in_Moscow.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Bell_tower_of_Church_of_Beheading_of_John_the_Baptist_in_Moscow.jpg/960px-Bell_tower_of_Church_of_Beheading_of_John_the_Baptist_in_Moscow.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Dmitry Ivanov.
+  sha256: 20a6118df23d091253db30fc669ebabc1045310f0512c235016501e83691a26c
+  query: church building
+  topics:
+  - building and structure
+- title: File:Church of St George - Kyustendil.jpg
+  page: https://commons.wikimedia.org/wiki/File:Church_of_St_George_-_Kyustendil.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Church_of_St_George_-_Kyustendil.jpg/960px-Church_of_St_George_-_Kyustendil.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Plamen Agov (user:MrPanyGoff)
+  sha256: 964095bf955780ce3217c33daa4ebfbcbc501e26444b981863adbc50df5be540
+  query: church building
+  topics:
+  - building and structure
+- title: File:Indian River Inlet Bridge DE1.jpg
+  page: https://commons.wikimedia.org/wiki/File:Indian_River_Inlet_Bridge_DE1.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Indian_River_Inlet_Bridge_DE1.jpg/960px-Indian_River_Inlet_Bridge_DE1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Acroterion
+  sha256: 8d1e4e12e2b34a42d6b8313e66d6e6ba7ebc8adf3caa65b5f97f33c06a823e6d
+  query: bridge river
+  topics:
+  - building and structure
+- title: File:New River Gorge Bridge.jpg
+  page: https://commons.wikimedia.org/wiki/File:New_River_Gorge_Bridge.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/New_River_Gorge_Bridge.jpg/960px-New_River_Gorge_Bridge.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: JaGa
+  sha256: b3a012760f25f5b0faa5572d8e442a5128b4d187df8b161bddb9b7f151363887
+  query: bridge river
+  topics:
+  - building and structure
+  - landscape
+- title: File:Lukmanierpass, Passo del Lucomagno. 20-09-2022. (actm.) 26.jpg
+  page: https://commons.wikimedia.org/wiki/File:Lukmanierpass,_Passo_del_Lucomagno._20-09-2022._(actm.)_26.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Lukmanierpass%2C_Passo_del_Lucomagno._20-09-2022._%28actm.%29_26.jpg/960px-Lukmanierpass%2C_Passo_del_Lucomagno._20-09-2022._%28actm.%29_26.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Agnes Monkelbaan
+  sha256: 293c1b1748f109a794495299314516b38a690480d67649c35efbd69c161befdb
+  query: mountain hut
+  topics:
+  - building and structure
+  - landscape
+- title: File:Glecksteinhütte front 20200121.jpg
+  page: https://commons.wikimedia.org/wiki/File:Glecksteinh%C3%BCtte_front_20200121.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Glecksteinh%C3%BCtte_front_20200121.jpg/960px-Glecksteinh%C3%BCtte_front_20200121.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Daniel Kraft
+  sha256: b54eef51dedeea7e09bfdcef3e4efebd4102ed146fb8eec1bc717252b9d22e63
+  query: mountain hut
+  topics:
+  - building and structure
+  - landscape
+- title: File:Zagedan Lakes, Mountain cirque, Caucasus Mountains.jpg
+  page: https://commons.wikimedia.org/wiki/File:Zagedan_Lakes,_Mountain_cirque,_Caucasus_Mountains.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/Zagedan_Lakes%2C_Mountain_cirque%2C_Caucasus_Mountains.jpg/960px-Zagedan_Lakes%2C_Mountain_cirque%2C_Caucasus_Mountains.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 4.0
+  author: Vyacheslav Argenberg
+  sha256: 0c26026b5cb435ed5851dab35fa14eded00da3db41ee5a0974eea4f2da39c6bb
+  query: mountain landscape
+  topics:
+  - landscape
+- title: File:Paul Bril 002.jpg
+  page: https://commons.wikimedia.org/wiki/File:Paul_Bril_002.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Paul_Bril_002.jpg/960px-Paul_Bril_002.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: Paul Bril
+  sha256: 59ffe190f792a79e6c5a3d76fa622dbdd6b9c30ad6ea628b484562bd467f9daf
+  query: mountain landscape
+  topics:
+  - landscape
+  - art
+- title: File:Careening of a pirogue on a sandy beach of a tiny island in the Mekong near Don Det in Laos.jpg
+  page: https://commons.wikimedia.org/wiki/File:Careening_of_a_pirogue_on_a_sandy_beach_of_a_tiny_island_in_the_Mekong_near_Don_Det_in_Laos.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Careening_of_a_pirogue_on_a_sandy_beach_of_a_tiny_island_in_the_Mekong_near_Don_Det_in_Laos.jpg/960px-Careening_of_a_pirogue_on_a_sandy_beach_of_a_tiny_island_in_the_Mekong_near_Don_Det_in_Laos.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Basile Morin
+  sha256: 1d77b594d7dcc56960d3a9c56b7c656ab28957e157183cfaf20767c4f9d148c5
+  query: sandy beach
+  topics:
+  - landscape
+  - vehicle
+- title: File:2020-12-18 Sandy Beach, NSW 1.jpg
+  page: https://commons.wikimedia.org/wiki/File:2020-12-18_Sandy_Beach,_NSW_1.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/2020-12-18_Sandy_Beach%2C_NSW_1.jpg/960px-2020-12-18_Sandy_Beach%2C_NSW_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Maksym Kozlenko
+  sha256: 7d6ad1c579dd6fad5644401bff8ab892d8f39eddf66ec739df95093ef03efb3c
+  query: sandy beach
+  topics:
+  - landscape
+- title: File:Phu Sang Waterfall 01.jpg
+  page: https://commons.wikimedia.org/wiki/File:Phu_Sang_Waterfall_01.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Phu_Sang_Waterfall_01.jpg/960px-Phu_Sang_Waterfall_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Khunkay
+  sha256: a143b4c2da1d7ab3d736072724201d99ef756d1f17fe6e59615054f6c6983562
+  query: waterfall
+  topics:
+  - landscape
+  - person
+- title: File:Montmorency waterfall, Québec, Québec.jpg
+  page: https://commons.wikimedia.org/wiki/File:Montmorency_waterfall,_Qu%C3%A9bec,_Qu%C3%A9bec.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Montmorency_waterfall%2C_Qu%C3%A9bec%2C_Qu%C3%A9bec.jpg/960px-Montmorency_waterfall%2C_Qu%C3%A9bec%2C_Qu%C3%A9bec.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Wilfredor
+  sha256: 6eceb69bde2e269fdc1c688153cc53b82fcba0b969a56112dd4d74c0e208ad6a
+  query: waterfall
+  topics:
+  - landscape
+- title: File:IBM Thinkpad R51.jpg
+  page: https://commons.wikimedia.org/wiki/File:IBM_Thinkpad_R51.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/IBM_Thinkpad_R51.jpg/960px-IBM_Thinkpad_R51.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: André Karwath aka Aka
+  sha256: f1f6b3343dfde754cd7a1216a954d0d9bc37d16839d6a1ed96f84be183bcedb2
+  query: laptop computer
+  topics:
+  - electronics
+- title: File:HP Pavilion Computer laptop keyboard closeup.jpg
+  page: https://commons.wikimedia.org/wiki/File:HP_Pavilion_Computer_laptop_keyboard_closeup.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/HP_Pavilion_Computer_laptop_keyboard_closeup.jpg/960px-HP_Pavilion_Computer_laptop_keyboard_closeup.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 2.0
+  author: Carissa Rogers
+  sha256: fd19afd56818603d10b6e76c66cc2f7ff9a0268e0f9701f72f6f3b1403ecb2c2
+  query: laptop computer
+  topics:
+  - electronics
+- title: File:Smartphone display screen.jpg
+  page: https://commons.wikimedia.org/wiki/File:Smartphone_display_screen.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Smartphone_display_screen.jpg/960px-Smartphone_display_screen.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC0
+  author: Skitterphoto
+  sha256: 555796e5f4151cd98593d22f7533c0f5d2135c02422ae1eb36ef04e9988d78ba
+  query: smartphone
+  topics:
+  - electronics
+- title: File:Lobby lounge of Amantaka Suite Amantaka luxury Resort & Hotel Luang Prabang Laos.jpg
+  page: https://commons.wikimedia.org/wiki/File:Lobby_lounge_of_Amantaka_Suite_Amantaka_luxury_Resort_%26_Hotel_Luang_Prabang_Laos.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Lobby_lounge_of_Amantaka_Suite_Amantaka_luxury_Resort_%26_Hotel_Luang_Prabang_Laos.jpg/960px-Lobby_lounge_of_Amantaka_Suite_Amantaka_luxury_Resort_%26_Hotel_Luang_Prabang_Laos.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Basile Morin
+  sha256: 4c27ce90ef78cb92ef1679b537bcf37f7e3689d8e70f169bd5c10eaf475c1916
+  query: armchair
+  topics:
+  - furniture
+  - building and structure
+- title: File:Vans sneakers and socks.jpg
+  page: https://commons.wikimedia.org/wiki/File:Vans_sneakers_and_socks.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Vans_sneakers_and_socks.jpg/960px-Vans_sneakers_and_socks.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Downtowngal
+  sha256: b98f63ca469fb32aff42e6616331a4d3373a33f5192bab9ecfea02b5764a7e3c
+  query: sneakers shoes
+  topics:
+  - clothing
+  - person
+- title: File:2023 Adidas Yeezy 350 V2 EF2905 (1).jpg
+  page: https://commons.wikimedia.org/wiki/File:2023_Adidas_Yeezy_350_V2_EF2905_(1).jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/2023_Adidas_Yeezy_350_V2_EF2905_%281%29.jpg/960px-2023_Adidas_Yeezy_350_V2_EF2905_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Jacek Halicki
+  sha256: 2346605c22ed34ba329e6cd3a52a3766a479db709992aab8cad993b0f8e7e563
+  query: sneakers shoes
+  topics:
+  - clothing
+- title: File:Man playing an acoustic brazilian guitar (Violão) on Marco Zero Square, Refice, Pernambuco, Brazil.jpg
+  page: https://commons.wikimedia.org/wiki/File:Man_playing_an_acoustic_brazilian_guitar_(Viol%C3%A3o)_on_Marco_Zero_Square,_Refice,_Pernambuco,_Brazil.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Man_playing_an_acoustic_brazilian_guitar_%28Viol%C3%A3o%29_on_Marco_Zero_Square%2C_Refice%2C_Pernambuco%2C_Brazil.jpg/960px-Man_playing_an_acoustic_brazilian_guitar_%28Viol%C3%A3o%29_on_Marco_Zero_Square%2C_Refice%2C_Pernambuco%2C_Brazil.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC0
+  author: Wilfredor
+  sha256: eed8a5d8d9370b185a9d76dce76658d1fdc065f665a1dcfaa7558325796b0187
+  query: acoustic guitar
+  topics:
+  - musical instrument
+- title: File:Harri Stojka 30.08.2008c.jpg
+  page: https://commons.wikimedia.org/wiki/File:Harri_Stojka_30.08.2008c.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Harri_Stojka_30.08.2008c.jpg/960px-Harri_Stojka_30.08.2008c.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 3.0
+  author: Manfred Werner - Tsui
+  sha256: 947495424ad3be0dcae64299dad5aead5934be69904491f0d85c2ae2dbf44150
+  query: acoustic guitar
+  topics:
+  - musical instrument
+  - person
+- title: File:Albert Bierstadt - Among the Sierra Nevada, California - Google Art Project.jpg
+  page: https://commons.wikimedia.org/wiki/File:Albert_Bierstadt_-_Among_the_Sierra_Nevada,_California_-_Google_Art_Project.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Albert_Bierstadt_-_Among_the_Sierra_Nevada%2C_California_-_Google_Art_Project.jpg/960px-Albert_Bierstadt_-_Among_the_Sierra_Nevada%2C_California_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: Albert Bierstadt
+  sha256: 6bc446656c367f055f03a59619c6b5ebb070b9d64ef27be21c34566e6d21c381
+  query: oil painting museum
+  topics:
+  - art
+  - landscape
+- title: File:Edams Museum (1530) - First Floor - Oil Painting depicting Anglo-Dutch War Sea Battle.jpg
+  page: https://commons.wikimedia.org/wiki/File:Edams_Museum_(1530)_-_First_Floor_-_Oil_Painting_depicting_Anglo-Dutch_War_Sea_Battle.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Edams_Museum_%281530%29_-_First_Floor_-_Oil_Painting_depicting_Anglo-Dutch_War_Sea_Battle.jpg/960px-Edams_Museum_%281530%29_-_First_Floor_-_Oil_Painting_depicting_Anglo-Dutch_War_Sea_Battle.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Txllxt TxllxT
+  sha256: fc049521106ee4a6b655b63954e4c8a39090eb5ebf8873fdd5ac989b77743d2e
+  query: oil painting museum
+  topics:
+  - art
+- title: File:Europe in 1923.jpg
+  page: https://commons.wikimedia.org/wiki/File:Europe_in_1923.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Europe_in_1923.jpg/960px-Europe_in_1923.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: Bacon, George Washington (1830-1921)
+  sha256: b5b15995f538c16859eb07c94d2e87bb0d430b441bff74afbfe77eafb53bdf1b
+  query: map of europe
+  topics:
+  - document
+- title: File:Map of Europe, 1946 (25289557032).jpg
+  page: https://commons.wikimedia.org/wiki/File:Map_of_Europe,_1946_(25289557032).jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Map_of_Europe%2C_1946_%2825289557032%29.jpg/960px-Map_of_Europe%2C_1946_%2825289557032%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: Public domain
+  author: The National Archives UK
+  sha256: ef4d99984709790a6ddd8f87f175eb8fadbea0ee36cbbe6d6d4888d243bbcce0
+  query: map of europe
+  topics:
+  - document
+  - art
+- title: File:Jakarta old football.jpg
+  page: https://commons.wikimedia.org/wiki/File:Jakarta_old_football.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Jakarta_old_football.jpg/960px-Jakarta_old_football.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY 2.0
+  author: Jonathan McIntosh
+  sha256: afa253b66635d0e8143fbfc94fd4e8b2d66262cb05fe037aa9134d6a2015b802
+  query: football ball
+  topics:
+  - sports equipment
+  - person
+- title: File:Algérie - Arménie - 20140531 - Yacine Brahimi (Alg) face à Taron Voskanyan (Arm).jpg
+  page: https://commons.wikimedia.org/wiki/File:Alg%C3%A9rie_-_Arm%C3%A9nie_-_20140531_-_Yacine_Brahimi_(Alg)_face_%C3%A0_Taron_Voskanyan_(Arm).jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Alg%C3%A9rie_-_Arm%C3%A9nie_-_20140531_-_Yacine_Brahimi_%28Alg%29_face_%C3%A0_Taron_Voskanyan_%28Arm%29.jpg/960px-Alg%C3%A9rie_-_Arm%C3%A9nie_-_20140531_-_Yacine_Brahimi_%28Alg%29_face_%C3%A0_Taron_Voskanyan_%28Arm%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Clément Bucco-Lechat
+  sha256: 01ef7673d5c786e89fe7d2d5f5ab58acb112f5282865469c7d253d8ae5b74a84
+  query: football ball
+  topics:
+  - sports equipment
+  - person
+- title: File:Open refrigerator with food at night.jpg
+  page: https://commons.wikimedia.org/wiki/File:Open_refrigerator_with_food_at_night.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Open_refrigerator_with_food_at_night.jpg/960px-Open_refrigerator_with_food_at_night.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: W.carter
+  sha256: be3ada8a385338d5a697e9f022d4eb8a44b12d5af6def6548d1c7d875566f2ad
+  query: refrigerator
+  topics:
+  - household appliance
+  - food and drink
+- title: File:Panasonic HOME REFRIGERATOR NR-C320WP-N.jpg
+  page: https://commons.wikimedia.org/wiki/File:Panasonic_HOME_REFRIGERATOR_NR-C320WP-N.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Panasonic_HOME_REFRIGERATOR_NR-C320WP-N.jpg/960px-Panasonic_HOME_REFRIGERATOR_NR-C320WP-N.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC BY-SA 4.0
+  author: Dinkun Chen
+  sha256: 39862174abdf86e503b393967752b2d7e1400511cf1db514bea57ef39bd34a72
+  query: refrigerator
+  topics:
+  - household appliance
+- title: File:Repair tool kit.jpg
+  page: https://commons.wikimedia.org/wiki/File:Repair_tool_kit.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Repair_tool_kit.jpg/960px-Repair_tool_kit.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC0
+  author: Wilfredor
+  sha256: 73f3fb8d72502e3157bc89fd7db35e7339abfb073f35f0e931b2d34e386e7389
+  query: hammer tool
+  topics:
+  - tool
+- title: File:Armorer's Hammer MET 12.230.2 001feb2014.jpg
+  page: https://commons.wikimedia.org/wiki/File:Armorer%27s_Hammer_MET_12.230.2_001feb2014.jpg
+  url: https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Armorer%27s_Hammer_MET_12.230.2_001feb2014.jpg/960px-Armorer%27s_Hammer_MET_12.230.2_001feb2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+  license: CC0
+  author: unknown
+  sha256: 4740c960f72b84cb0dc93f0462d97bab65642382e9cc8f5b236f3a6a4b52aef3
+  query: hammer tool
+  topics:
+  - tool
+  - weapon
+- title: File:Pfanne (Edelstahl).jpg
+  page: https://commons.wikimedia.org/wiki/File:Pfanne_(Edelstahl).jpg
+  url: https://upload.wikimedia.org/wikipedia/commons/5/5c/Pfanne_%28Edelstahl%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled
+  license: Public domain
+  author: unknown
+  sha256: be6679bed467df5b2a6e9d944972a2bb0dafab36fb350a29fad672e82d9a5d14
+  query: frying pan
+  topics:
+  - kitchenware

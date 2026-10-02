@@ -47,6 +47,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
+"scripts/build_eval_manifest.py" = ["E501"]  # REVIEW is keyed by full Commons file titles
 
 [tool.mypy]
 strict = true

@@ -1,10 +1,18 @@
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.6
+  # ruff runs from the project environment (uv.lock), so pre-commit, CI and editors use one
+  # version; a pinned ruff-pre-commit rev drifted and reformatted files CI had accepted.
+  - repo: local
     hooks:
       - id: ruff
-        args: [--fix]
+        name: ruff
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
       - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:

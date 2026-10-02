@@ -88,8 +88,8 @@ Example: a photo of a wooden hut in a rice field (real output, `top_k=3`, ids sh
 }
 ```
 
-Spot checks on six Wikimedia Commons photos (2026-10-02). This is not an evaluation; see
-the roadmap:
+Spot checks on six Wikimedia Commons photos (2026-10-02); the real numbers are in
+[Evaluation](#evaluation):
 
 | Photo | `primary.path` (label score) | `topic` |
 |---|---|---|
@@ -175,6 +175,44 @@ RAM with the SigLIP backend (measured 2026-10-02). The text tower runs only when
 afterwards. The image tower is fp32 on purpose: in a spike the int8 version misread an
 aurora painting as a boat.
 
+## Evaluation
+
+[`eval/manifest.yaml`](eval/manifest.yaml) is a frozen set of **58 freely licensed Wikimedia
+Commons photos** across 17 root topics. Every entry records the source page, author, license
+and SHA-256. Images were picked by search query and license only, never by model output, then
+checked by eye. Mixed images accept more than one topic (a girl hugging her dog: `person` or
+`animal`). The metric is **root-topic top-1 accuracy**: is `topic` one of the accepted topics?
+
+| Backend | Root-topic accuracy | 95 % interval (Wilson) | In top 3 | Latency/image |
+|---|---|---|---|---|
+| `siglip` | **93.1 %** (54/58) | 83.6–97.3 % | 98.3 % | 35 ms mean, 41 ms p95 |
+| `mobilenet` | 70.7 % (41/58) | 58.0–80.8 % | 84.5 % | 7 ms mean, 10 ms p95 |
+
+Measured 2026-10-02 on an M-series CPU. The intervals do not overlap, so the difference holds
+even on 58 images. CI runs the eval on every PR and on pushes to `main`/`dev` and fails below 90 % for SigLIP. The
+report is in the job summary.
+
+```bash
+uv run python scripts/evaluate.py                         # siglip
+AURORA_BACKEND=mobilenet uv run python scripts/evaluate.py
+```
+
+What the misses show:
+- **The catch-all bias of summed scores.** A sunflower became `object` although its top label
+  was `daisy` (a plant). ImageNet has no sunflower, so probability spread across many weak
+  labels, and the 113-label `object` topic collected more of it than `plant`. Broader label
+  coverage fixes this better than any score trick. It is **not** patched here, because tuning
+  the taxonomy on eval misses would make the eval meaningless.
+- **Defensible disagreements**: a marina → `dock`, a waterfall with a dam → `dam`.
+- MobileNet reads painted portraits as clothing and maps as jigsaw puzzles (1.00). Those are
+  the limits of a closed 1000-class model.
+
+Images are cached in `eval/images/` (in CI: an Actions cache keyed by the manifest). Only bytes
+that match the manifest's SHA-256 are cached. If Commons re-renders or deletes a thumbnail, that
+image is reported as *unavailable* instead of being scored, and the gate fails once more than
+10 % are unavailable. The fix is then to rebuild the set: `scripts/build_eval_manifest.py
+--force` followed by a new visual review, because Commons search order drifts between runs.
+
 ## Configuration
 
 All settings are environment variables with the `AURORA_` prefix. See [`.env.example`](.env.example).
@@ -216,11 +254,14 @@ src/aurora_images/
   siglip.py       SigLIP 2: image/text towers, tokenizer, label-embedding cache
   taxonomy.py     topic tree, label paths, roll-up of probabilities into topic scores
   service.py      classifier + taxonomy -> labels, topics, uncertainty, timings
+  evaluation.py   manifest loading, cached downloads, metrics, markdown/JSON reports
   data/taxonomy_open.yaml, data/taxonomy.yaml
   config.py       pydantic-settings
 scripts/fetch_model.py      pinned model download
 scripts/build_taxonomy.py   regenerate both taxonomies from WordNet (dev only)
 scripts/warm_label_cache.py embed label texts ahead of time (Docker build)
+scripts/evaluate.py         eval gate (root-topic accuracy, per-topic table, misses)
+scripts/build_eval_manifest.py   rebuild the eval set from Commons (needs re-review)
 ```
 
 ## Model and data
@@ -231,6 +272,7 @@ scripts/warm_label_cache.py embed label texts ahead of time (Docker build)
 | MobileNetV2 weights | [ONNX Model Zoo, MobileNetV2-12](https://github.com/onnx/models/tree/main/validated/vision/classification/mobilenet) | Apache-2.0   |
 | Labels  | [pytorch/hub `imagenet_classes.txt`](https://github.com/pytorch/hub)   | BSD-3-Clause |
 | Synset ids | [Keras `imagenet_class_index.json`](https://storage.googleapis.com/download.tensorflow.org/data/imagenet_class_index.json) | Apache-2.0 |
+| Eval images | 58 Wikimedia Commons files, per-file author + license in `eval/manifest.yaml` (CC BY / CC BY-SA / CC0 / public domain); not redistributed, downloaded on demand | per file |
 | Topic tree | [WordNet 3.0](https://wordnet.princeton.edu/license-and-commercial-use) via NLTK | WordNet license (permissive) |
 
 The weights were trained by their publishers (SigLIP 2 on WebLI, MobileNetV2 on
@@ -249,7 +291,6 @@ here with its source and license before it is used.
 ## Roadmap
 
 - Labels learned from example images at runtime, plus a feedback endpoint.
-- An evaluation script with per-topic accuracy as a CI gate.
 - An S3-compatible `ImageStorage`, plus a `GET /v1/images/{id}`.
 - API keys and rate limiting.
 
