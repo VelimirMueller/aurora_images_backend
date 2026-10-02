@@ -1,7 +1,9 @@
 """Score a classification service against a manifest of images with accepted root topics."""
 
 import hashlib
+import math
 import time
+import urllib.error
 import urllib.request
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
@@ -64,6 +66,17 @@ class Report:
     def topic_accuracy(self) -> float:
         return _ratio(sum(o.hit for o in self.outcomes), self.scored)
 
+    def topic_accuracy_interval(self, z: float = 1.96) -> tuple[float, float]:
+        """95 % Wilson score interval for the root-topic accuracy."""
+        n = self.scored
+        if n == 0:
+            return 0.0, 0.0
+        p = self.topic_accuracy
+        denominator = 1 + z * z / n
+        centre = (p + z * z / (2 * n)) / denominator
+        half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denominator
+        return round(centre - half, 3), round(centre + half, 3)
+
     @property
     def topic_accuracy_top3(self) -> float:
         return _ratio(sum(o.hit_top3 for o in self.outcomes), self.scored)
@@ -91,6 +104,7 @@ class Report:
             "scored": self.scored,
             "unavailable": self.unavailable,
             "topic_accuracy": round(self.topic_accuracy, 4),
+            "topic_accuracy_95ci": list(self.topic_accuracy_interval()),
             "topic_accuracy_top3": round(self.topic_accuracy_top3, 4),
             "latency_ms": {"mean": mean, "p95": p95},
             "per_topic": {t: {"hits": h, "total": n} for t, (h, n) in self.per_topic().items()},
@@ -99,12 +113,13 @@ class Report:
 
     def markdown(self) -> str:
         mean, p95 = self.latency_ms()
+        low, high = self.topic_accuracy_interval()
         lines = [
             f"## Eval: {self.model}",
             "",
             f"- Root-topic accuracy: **{self.topic_accuracy:.1%}** "
-            f"({sum(o.hit for o in self.outcomes)}/{self.scored}), "
-            f"in top 3: {self.topic_accuracy_top3:.1%}",
+            f"({sum(o.hit for o in self.outcomes)}/{self.scored}, 95 % CI "
+            f"{low:.1%}-{high:.1%}), in top 3: {self.topic_accuracy_top3:.1%}",
             f"- Images scored: {self.scored}/{self.images}"
             + (f" ({len(self.unavailable)} unavailable)" if self.unavailable else ""),
             f"- Latency per image: mean {mean} ms, p95 {p95} ms",
@@ -152,8 +167,11 @@ def fetch(item: Item, cache_dir: Path) -> bytes | None:
             return data
         path.unlink()
     request = urllib.request.Request(item.url, headers={"User-Agent": USER_AGENT})  # noqa: S310
-    with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310 - manifest URLs
-        downloaded: bytes = response.read()
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310 - manifest URLs
+            downloaded: bytes = response.read()
+    except (urllib.error.URLError, TimeoutError):
+        return None  # deleted or unreachable upstream: unavailable, counted by the gate
     if not _verified(downloaded, item):
         return None
     cache_dir.mkdir(parents=True, exist_ok=True)

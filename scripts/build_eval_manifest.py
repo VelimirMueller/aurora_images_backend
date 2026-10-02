@@ -202,7 +202,13 @@ def main() -> None:
     entries = []
     seen: set[str] = set()
     for query, topic in QUERIES:
-        for item in candidates(query):
+        found = candidates(query)
+        if len(found) < PER_QUERY:
+            print(
+                f"WARNING: {query!r} has only {len(found)} free-licensed candidates",
+                file=sys.stderr,
+            )
+        for item in found:
             title = str(item["title"])
             review = REVIEW.get(title)
             if title in seen or review == "drop":

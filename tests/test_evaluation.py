@@ -50,14 +50,17 @@ def test_report_metrics_count_any_accepted_topic() -> None:
         "vehicle": (0, 1),
     }
     assert report.latency_ms() == (10.0, 10.0)
+    assert report.topic_accuracy_interval() == (0.15, 0.85)
     markdown = report.markdown()
-    assert "**50.0%** (2/4)" in markdown
+    assert "**50.0%** (2/4, 95 % CI 15.0%-85.0%)" in markdown
     assert "1 unavailable" in markdown
     assert "| x.jpg" not in markdown and "| t.jpg | vehicle | object" in markdown
 
 
 def test_empty_report_does_not_divide_by_zero() -> None:
     report = Report(model="m", images=0)
+
+    assert report.topic_accuracy_interval() == (0.0, 0.0)
 
     assert (report.topic_accuracy, report.available_ratio, report.latency_ms()) == (
         0.0,
@@ -108,6 +111,25 @@ def test_changed_upstream_file_is_unavailable_and_not_cached(
     assert report.unavailable == ["File:x.jpg"]
     assert report.scored == 0
     assert not cached.exists(), "a mismatched file must not stay in the cache"
+
+
+def test_deleted_upstream_file_is_unavailable_not_a_crash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import urllib.error
+
+    item = Item(
+        "File:gone.jpg", "https://invalid.example/gone.jpg", "0" * 64, ("animal",), "CC0", "x"
+    )
+
+    def gone(*args: object, **kwargs: object) -> None:
+        raise urllib.error.HTTPError(item.url, 404, "Not Found", {}, None)  # type: ignore[arg-type]
+
+    monkeypatch.setattr("aurora_images.evaluation.urllib.request.urlopen", gone)
+
+    report = evaluate(small_service(), [item], tmp_path)
+
+    assert report.unavailable == ["File:gone.jpg"]
 
 
 def test_bad_cache_entry_is_replaced_by_a_verified_download(
