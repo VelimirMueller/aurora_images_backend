@@ -1,9 +1,10 @@
+import hashlib
+import time
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
-from aurora_images.classifier import Classifier
 from aurora_images.config import Settings, get_settings
 from aurora_images.images import (
     InvalidImageError,
@@ -16,9 +17,13 @@ from aurora_images.schemas import (
     ClassificationOut,
     ErrorOut,
     HealthOut,
+    ImageInfo,
     ImageOut,
-    PredictionOut,
+    LabelOut,
+    ModelInfo,
+    TopicOut,
 )
+from aurora_images.service import ClassificationService, ScoredLabel, ScoredTopic
 from aurora_images.storage import ImageStorage
 
 router = APIRouter()
@@ -34,11 +39,11 @@ def get_storage(request: Request) -> ImageStorage:
     return storage
 
 
-def get_classifier(request: Request) -> Classifier:
-    classifier: Classifier | None = request.app.state.classifier
-    if classifier is None:
+def get_service(request: Request) -> ClassificationService:
+    service: ClassificationService | None = request.app.state.service
+    if service is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "classification model not loaded")
-    return classifier
+    return service
 
 
 async def validated_image(
@@ -56,7 +61,7 @@ async def validated_image(
 
 @router.get("/health", tags=["ops"])
 def health(request: Request) -> HealthOut:
-    return HealthOut(status="ok", model_loaded=request.app.state.classifier is not None)
+    return HealthOut(status="ok", model_loaded=request.app.state.service is not None)
 
 
 @router.post(
@@ -86,13 +91,45 @@ async def upload_image(
     responses={**_IMAGE_ERRORS, 503: {"model": ErrorOut, "description": "Model not loaded"}},
 )
 async def classify_image(
+    request: Request,
     image: Annotated[ValidatedImage, Depends(validated_image)],
-    classifier: Annotated[Classifier, Depends(get_classifier)],
-    settings: Annotated[Settings, Depends(get_settings)],
+    service: Annotated[ClassificationService, Depends(get_service)],
 ) -> ClassificationOut:
-    """Classify an image without storing it. Returns the top-k labels with probabilities."""
-    predictions = await run_in_threadpool(classifier.classify, image.data, settings.top_k)
+    """Classify an image without storing it.
+
+    Returns the top-k labels with their topic path (e.g. animal → mammal → dog → beagle) and
+    the topic scores, where a topic's score is the summed probability of every label below it.
+    """
+    result = await run_in_threadpool(service.classify, image.data)
+    total_ms = round((time.perf_counter() - request.state.started) * 1000, 2)
     return ClassificationOut(
-        model=classifier.model_name,
-        predictions=[PredictionOut(label=p.label, score=p.score) for p in predictions],
+        request_id=request.state.request_id,
+        image=ImageInfo(
+            sha256=hashlib.sha256(image.data).hexdigest(),
+            content_type=f"image/{image.format.lower()}",
+            size_bytes=len(image.data),
+            width=image.width,
+            height=image.height,
+        ),
+        model=ModelInfo(name=service.model_name, taxonomy_version=service.taxonomy.version),
+        primary=_label_out(result.labels[0]),
+        topic=_topic_out(result.topic),
+        labels=[_label_out(label) for label in result.labels],
+        topics=[_topic_out(topic) for topic in result.topics],
+        uncertain=result.uncertain,
+        timings_ms={**result.timings_ms, "total": total_ms},
     )
+
+
+def _label_out(scored: ScoredLabel) -> LabelOut:
+    return LabelOut(
+        id=scored.label.id,
+        label=scored.label.name,
+        score=scored.score,
+        topic=scored.label.topic,
+        path=scored.path,
+    )
+
+
+def _topic_out(scored: ScoredTopic) -> TopicOut:
+    return TopicOut(id=scored.id, parent=scored.parent, depth=scored.depth, score=scored.score)
