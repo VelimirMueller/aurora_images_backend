@@ -52,6 +52,7 @@ class ClassificationOut(BaseModel):
 class HealthOut(BaseModel):
     status: str
     model_loaded: bool
+    model: str | None = Field(description="Loaded model name, or null when classification is off")
 
 
 class ErrorOut(BaseModel):

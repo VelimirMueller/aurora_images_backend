@@ -1,0 +1,112 @@
+version: 1
+source: taxonomy.yaml plus text prompts and open-vocabulary labels, scored by text (scripts/build_taxonomy.py)
+extends: package:taxonomy.yaml
+prompts:
+  n02012849: "crane (bird)"
+  n03126707: "construction crane"
+  n03710637: "maillot (dance tights)"
+  n03710721: "one-piece swimsuit"
+  n03594734: "jeans"
+  n13133613: "ear of corn"
+  n12768682: "rose hip"
+  n03832673: "notebook computer"
+  n06359193: "website screenshot"
+  n07579787: "plate of food"
+  n01871265: "elephant with tusks"
+  n03782006: "computer monitor"
+  n04152593: "computer screen"
+  n03793489: "computer mouse"
+  n03337140: "filing cabinet"
+  n03584829: "clothes iron"
+  n04554684: "washing machine"
+  n03930313: "pickaxe"
+  n04118776: "measuring ruler"
+  n04372370: "light switch"
+  n04243546: "slot machine"
+  n04254680: "cotton swab"
+  n01847000: "drake (male duck)"
+  n02389026: "sorrel horse"
+  n02412080: "ram (sheep)"
+  n02395406: "hog (pig)"
+  n02403003: "ox"
+  n01514859: "hen (chicken)"
+  n01514668: "rooster"
+  n01440764: "tench (fish)"
+  n03595614: "jersey (shirt)"
+  n04325704: "stole (scarf)"
+  n03014705: "chest (wooden box)"
+  n04125021: "safe (strongbox)"
+topics:
+  - {id: art, parent: null}
+  - {id: document, parent: null}
+  - {id: sky, parent: landscape}
+  - {id: city, parent: building and structure}
+labels:
+  - {id: 'open:hut', name: hut, topic: building}
+  - {id: 'open:house', name: house, topic: building}
+  - {id: 'open:wooden-cabin', name: wooden cabin, topic: building}
+  - {id: 'open:farmhouse', name: farmhouse, topic: building}
+  - {id: 'open:apartment-building', name: apartment building, topic: building}
+  - {id: 'open:office-building', name: office building, topic: building}
+  - {id: 'open:skyscraper', name: skyscraper, topic: building}
+  - {id: 'open:lighthouse', name: lighthouse, topic: building}
+  - {id: 'open:tower', name: tower, topic: building and structure}
+  - {id: 'open:city-skyline', name: city skyline, topic: city}
+  - {id: 'open:street', name: street, topic: city}
+  - {id: 'open:road', name: road, topic: building and structure}
+  - {id: 'open:man', name: man, topic: person}
+  - {id: 'open:woman', name: woman, topic: person}
+  - {id: 'open:child', name: child, topic: person}
+  - {id: 'open:baby', name: baby, topic: person}
+  - {id: 'open:group-of-people', name: group of people, topic: person}
+  - {id: 'open:crowd', name: crowd, topic: person}
+  - {id: 'open:horse', name: horse, topic: hoofed mammal}
+  - {id: 'open:cow', name: cow, topic: hoofed mammal}
+  - {id: 'open:sheep', name: sheep, topic: hoofed mammal}
+  - {id: 'open:deer', name: deer, topic: hoofed mammal}
+  - {id: 'open:rabbit', name: rabbit, topic: mammal}
+  - {id: 'open:chicken', name: chicken, topic: bird}
+  - {id: 'open:duck', name: duck, topic: bird}
+  - {id: 'open:motorcycle', name: motorcycle, topic: motor vehicle}
+  - {id: 'open:airplane', name: airplane, topic: aircraft}
+  - {id: 'open:helicopter', name: helicopter, topic: aircraft}
+  - {id: 'open:train', name: train, topic: rail vehicle}
+  - {id: 'open:tram', name: tram, topic: rail vehicle}
+  - {id: 'open:electric-scooter', name: electric scooter, topic: vehicle}
+  - {id: 'open:smartphone', name: smartphone, topic: electronics}
+  - {id: 'open:tablet-computer', name: tablet computer, topic: electronics}
+  - {id: 'open:headphones', name: headphones, topic: electronics}
+  - {id: 'open:smartwatch', name: smartwatch, topic: electronics}
+  - {id: 'open:tree', name: tree, topic: plant}
+  - {id: 'open:bouquet-of-flowers', name: bouquet of flowers, topic: flower}
+  - {id: 'open:grass', name: grass, topic: plant}
+  - {id: 'open:cactus', name: cactus, topic: plant}
+  - {id: 'open:houseplant', name: houseplant, topic: plant}
+  - {id: 'open:forest', name: forest, topic: landscape}
+  - {id: 'open:beach', name: beach, topic: landscape}
+  - {id: 'open:mountain', name: mountain, topic: landscape}
+  - {id: 'open:river', name: river, topic: landscape}
+  - {id: 'open:lake', name: lake, topic: landscape}
+  - {id: 'open:waterfall', name: waterfall, topic: landscape}
+  - {id: 'open:desert', name: desert, topic: landscape}
+  - {id: 'open:snowy-landscape', name: snowy landscape, topic: landscape}
+  - {id: 'open:field', name: field, topic: landscape}
+  - {id: 'open:sunset', name: sunset, topic: sky}
+  - {id: 'open:night-sky-with-stars', name: night sky with stars, topic: sky}
+  - {id: 'open:aurora-borealis', name: aurora borealis, topic: sky}
+  - {id: 'open:cloudy-sky', name: cloudy sky, topic: sky}
+  - {id: 'open:burger', name: burger, topic: dish}
+  - {id: 'open:salad', name: salad, topic: dish}
+  - {id: 'open:cake', name: cake, topic: food and drink}
+  - {id: 'open:sushi', name: sushi, topic: dish}
+  - {id: 'open:coffee', name: coffee, topic: drink}
+  - {id: 'open:painting', name: painting, topic: art}
+  - {id: 'open:drawing', name: drawing, topic: art}
+  - {id: 'open:sculpture', name: sculpture, topic: art}
+  - {id: 'open:graffiti', name: graffiti, topic: art}
+  - {id: 'open:text-document', name: text document, topic: document}
+  - {id: 'open:screenshot', name: screenshot, topic: document}
+  - {id: 'open:chart', name: chart, topic: document}
+  - {id: 'open:map', name: map, topic: document}
+  - {id: 'open:logo', name: logo, topic: document}
+  - {id: 'open:handwriting', name: handwriting, topic: document}

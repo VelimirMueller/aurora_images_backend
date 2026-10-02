@@ -7,6 +7,5 @@
 .ruff_cache
 .coverage
 uploads
-models/*.onnx
-models/*.txt
+models/
 tests

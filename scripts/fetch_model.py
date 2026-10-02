@@ -1,8 +1,11 @@
 """Download the pretrained model and labels into models/, verified by SHA-256.
 
-Weights are not committed to git. Usage: uv run python scripts/fetch_model.py
+Weights are not committed to git. URLs are pinned to a revision and every file is checked.
+
+Usage: uv run python scripts/fetch_model.py [siglip] [mobilenet]   (default: both, ~700 MB)
 """
 
+import argparse
 import hashlib
 import shutil
 import sys
@@ -13,21 +16,44 @@ from pathlib import Path
 
 MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
 
+SIGLIP = "https://huggingface.co/onnx-community/siglip2-base-patch16-224-ONNX/resolve/ba1f3b0843f24bc5417d38e19c37b287d719b2f4"
+
+# backend -> {path under models/: (url, sha256)}
 ARTIFACTS = {
-    "mobilenetv2-12.onnx": (
-        "https://github.com/onnx/models/raw/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx",
-        "c0c3f76d93fa3fd6580652a45618618a220fced18babf65774ed169de0432ad5",
-    ),
-    # Display names; only scripts/build_taxonomy.py reads this, the server uses taxonomy.yaml.
-    "imagenet_classes.txt": (
-        "https://raw.githubusercontent.com/pytorch/hub/master/imagenet_classes.txt",
-        "1f386e0d1cb6e28b9c2dac651c3dea6801e98ad1b41a14ce6bb1a093d72069f5",
-    ),
+    "siglip": {
+        "siglip2-base-patch16-224/vision_model.onnx": (
+            f"{SIGLIP}/onnx/vision_model.onnx",
+            "c0573e3f4140c3a7c4e9cc5912bd6b26a033b46a6a8e8af26cbea262b163bcad",
+        ),
+        "siglip2-base-patch16-224/text_model_quantized.onnx": (
+            f"{SIGLIP}/onnx/text_model_quantized.onnx",
+            "3a0603d3a00c05a80a6ded4743c16aaac7b1e62cdcc7e362e7ce418659b96400",
+        ),
+        "siglip2-base-patch16-224/tokenizer.json": (
+            f"{SIGLIP}/tokenizer.json",
+            "cb9140fae3ac5122c972d37adf83e1248471a38147ad76f8215c8872c6fd8322",
+        ),
+    },
+    "mobilenet": {
+        "mobilenetv2-12.onnx": (
+            "https://github.com/onnx/models/raw/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx",
+            "c0c3f76d93fa3fd6580652a45618618a220fced18babf65774ed169de0432ad5",
+        ),
+        # Display names; only scripts/build_taxonomy.py reads this.
+        "imagenet_classes.txt": (
+            "https://raw.githubusercontent.com/pytorch/hub/master/imagenet_classes.txt",
+            "1f386e0d1cb6e28b9c2dac651c3dea6801e98ad1b41a14ce6bb1a093d72069f5",
+        ),
+    },
 }
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        while chunk := fh.read(1 << 20):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def download(url: str, dest: Path, attempts: int = 3) -> None:
@@ -44,6 +70,7 @@ def download(url: str, dest: Path, attempts: int = 3) -> None:
 
 def fetch(name: str, url: str, expected: str) -> None:
     target = MODELS_DIR / name
+    target.parent.mkdir(parents=True, exist_ok=True)
     if target.is_file() and sha256(target) == expected:
         print(f"ok        {name}")
         return
@@ -58,9 +85,11 @@ def fetch(name: str, url: str, expected: str) -> None:
 
 
 def main() -> None:
-    MODELS_DIR.mkdir(exist_ok=True)
-    for name, (url, digest) in ARTIFACTS.items():
-        fetch(name, url, digest)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("backends", nargs="*", choices=list(ARTIFACTS), metavar="backend")
+    for backend in parser.parse_args().backends or ARTIFACTS:
+        for name, (url, digest) in ARTIFACTS[backend].items():
+            fetch(name, url, digest)
 
 
 if __name__ == "__main__":

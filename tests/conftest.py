@@ -69,6 +69,8 @@ def settings(tmp_path: Path, taxonomy_file: Path) -> Settings:
         upload_dir=tmp_path / "uploads",
         max_upload_bytes=64 * 1024,
         model_path=tmp_path / "missing.onnx",
+        siglip_dir=tmp_path / "missing-siglip",
+        label_cache_dir=tmp_path / "label-cache",
         taxonomy_path=taxonomy_file,
         top_k=3,
     )

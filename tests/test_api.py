@@ -8,8 +8,16 @@ from tests.conftest import make_image
 
 
 def test_health_reports_model_state(client: TestClient, client_without_model: TestClient) -> None:
-    assert client.get("/health").json() == {"status": "ok", "model_loaded": True}
-    assert client_without_model.get("/health").json() == {"status": "ok", "model_loaded": False}
+    assert client.get("/health").json() == {
+        "status": "ok",
+        "model_loaded": True,
+        "model": "fake-model",
+    }
+    assert client_without_model.get("/health").json() == {
+        "status": "ok",
+        "model_loaded": False,
+        "model": None,
+    }
 
 
 def test_upload_stores_image_under_generated_id(client: TestClient, settings: Settings) -> None:
@@ -153,3 +161,11 @@ def test_caller_request_id_is_kept_only_when_safe(
     response = client.get("/health", headers={"X-Request-ID": incoming})
 
     assert (response.headers["x-request-id"] == incoming) is kept
+
+
+def test_mobilenet_backend_without_weights_degrades_to_503(settings: Settings) -> None:
+    from aurora_images.main import create_app
+
+    mobilenet = settings.model_copy(update={"backend": "mobilenet", "taxonomy_path": None})
+    with TestClient(create_app(mobilenet)) as client:
+        assert client.get("/health").json()["model_loaded"] is False
