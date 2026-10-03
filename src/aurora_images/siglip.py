@@ -17,11 +17,10 @@ from typing import Protocol
 
 import numpy as np
 import numpy.typing as npt
-import onnxruntime as ort
 from PIL import Image, ImageOps
 from tokenizers import Tokenizer
 
-from aurora_images.classifier import ModelNotAvailableError, softmax
+from aurora_images.classifier import ModelNotAvailableError, load_session, softmax
 from aurora_images.taxonomy import Taxonomy, TaxonomyError
 
 logger = logging.getLogger("aurora_images")
@@ -30,7 +29,10 @@ MODEL_NAME = "siglip2-base-patch16-224"
 # onnx-community/siglip2-base-patch16-224-ONNX revision, pinned in scripts/fetch_model.py.
 REVISION = "ba1f3b0843f24bc5417d38e19c37b287d719b2f4"
 VISION_FILE = "vision_model.onnx"
-TEXT_FILE = "text_model_quantized.onnx"
+# fp32, not int8: the dynamically quantized text tower gives architecture-dependent embeddings
+# (cosine to fp32 0.996 on ARM but 0.959 mean / 0.872 min on x86 without VNNI), which flattened
+# the label distribution and broke the eval on CI. fp32 is identical on every architecture.
+TEXT_FILE = "text_model.onnx"
 TOKENIZER_FILE = "tokenizer.json"
 # Learned temperature of google/siglip2-base-patch16-224 (exp(logit_scale), logit_scale=4.7245).
 LOGIT_SCALE = float(np.exp(4.724453449249268))
@@ -95,7 +97,7 @@ class TextEncoder:
         return normalize(np.concatenate(chunks))
 
     def close(self) -> None:
-        """Drop the text tower (~300 MB) once the label embeddings exist."""
+        """Drop the text tower (~3 GB peak while embedding) once the label embeddings exist."""
         self._session = None
 
 
@@ -159,7 +161,9 @@ class SiglipClassifier:
         self.num_classes = len(label_embeddings)
 
     @classmethod
-    def from_dir(cls, model_dir: Path, taxonomy: Taxonomy, cache_dir: Path) -> "SiglipClassifier":
+    def from_dir(
+        cls, model_dir: Path, taxonomy: Taxonomy, cache_dir: Path, threads: int = 0
+    ) -> "SiglipClassifier":
         texts = [PROMPT_TEMPLATE.format(label.text) for label in taxonomy.labels]
         # Two labels with one text get one embedding and split its probability; that is a
         # taxonomy bug, so it fails startup instead of degrading to 503.
@@ -176,14 +180,14 @@ class SiglipClassifier:
                 f"SigLIP files missing in {model_dir} ({', '.join(missing)}); "
                 "run scripts/fetch_model.py"
             )
-        vision = _session(model_dir / VISION_FILE)
+        vision = _session(model_dir / VISION_FILE, threads)
         cache = LabelEmbeddingCache(cache_dir, _fingerprint(model_dir))
         embeddings = cache.load(texts, width=_embedding_width(vision))
         if embeddings is None:
             logger.info("embedding %d labels with the SigLIP text tower", len(texts))
             encoder = TextEncoder(
                 Tokenizer.from_file(str(model_dir / TOKENIZER_FILE)),
-                lambda: _session(model_dir / TEXT_FILE),
+                lambda: _session(model_dir / TEXT_FILE, threads),
             )
             embeddings = encoder.embed(texts)
             encoder.close()
@@ -199,8 +203,8 @@ class SiglipClassifier:
         return softmax((self._scale * cosine).astype(np.float32))
 
 
-def _session(path: Path) -> Session:
-    session: Session = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
+def _session(path: Path, threads: int = 0) -> Session:
+    session: Session = load_session(path, threads)
     return session
 
 

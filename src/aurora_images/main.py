@@ -30,9 +30,9 @@ def _load_classifier(settings: Settings, taxonomy: Taxonomy) -> Classifier | Non
     try:
         if settings.backend == "siglip":
             return SiglipClassifier.from_dir(
-                settings.siglip_dir, taxonomy, settings.label_cache_dir
+                settings.siglip_dir, taxonomy, settings.label_cache_dir, settings.ort_threads
             )
-        return OnnxClassifier(settings.model_path)
+        return OnnxClassifier(settings.model_path, settings.ort_threads)
     except ModelNotAvailableError as exc:
         logger.warning("classification disabled: %s", exc)
         return None

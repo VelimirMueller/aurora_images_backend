@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# BACKEND=siglip (default, ~690 MB of weights) or BACKEND=mobilenet (14 MB).
+# BACKEND=siglip (default, ~1.5 GB of weights) or BACKEND=mobilenet (14 MB).
 ARG BACKEND=siglip
 
 FROM python:3.12-slim AS build
