@@ -154,11 +154,19 @@ def load_manifest(path: Path) -> list[Item]:
     ]
 
 
-def fetch(item: Item, cache_dir: Path) -> bytes | None:
-    """Return the verified image bytes; None when the upstream file no longer matches.
+class Unavailable(Exception):
+    """The image cannot be scored; the message says why (shown in the report)."""
+
+
+_RETRY_STATUS = {429, 500, 502, 503, 504}
+
+
+def fetch(item: Item, cache_dir: Path, *, attempts: int = 4, pause: float = 0.3) -> bytes:
+    """Return the verified image bytes, or raise Unavailable with the reason.
 
     Only verified bytes are cached. A cached file with a wrong hash (truncated write, old
-    state) is removed and downloaded again, so it cannot stay "unavailable" forever.
+    state) is removed and downloaded again, so it cannot stay "unavailable" forever. Rate
+    limits and server errors are retried with backoff (Commons throttles bursts from CI IPs).
     """
     path = cache_dir / f"{item.sha256[:16]}.jpg"
     if path.is_file():
@@ -166,17 +174,32 @@ def fetch(item: Item, cache_dir: Path) -> bytes | None:
         if _verified(data, item):
             return data
         path.unlink()
-    request = urllib.request.Request(item.url, headers={"User-Agent": USER_AGENT})  # noqa: S310
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310 - manifest URLs
-            downloaded: bytes = response.read()
-    except (urllib.error.URLError, TimeoutError):
-        return None  # deleted or unreachable upstream: unavailable, counted by the gate
+    downloaded = _download(item.url, attempts, pause)
     if not _verified(downloaded, item):
-        return None
+        raise Unavailable("upstream file changed (SHA-256 mismatch)")
     cache_dir.mkdir(parents=True, exist_ok=True)
     path.write_bytes(downloaded)
     return downloaded
+
+
+def _download(url: str, attempts: int, pause: float) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
+    for attempt in range(1, attempts + 1):
+        time.sleep(pause)  # pace requests; never a burst
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310
+                data: bytes = response.read()
+                return data
+        except urllib.error.HTTPError as exc:
+            if exc.code not in _RETRY_STATUS or attempt == attempts:
+                raise Unavailable(f"HTTP {exc.code}") from exc
+            retry_after = exc.headers.get("Retry-After", "") if exc.headers else ""
+            time.sleep(float(retry_after) if retry_after.isdigit() else 2.0**attempt)
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt == attempts:
+                raise Unavailable(f"network error: {exc}") from exc
+            time.sleep(2.0**attempt)
+    raise Unavailable("no attempts made")
 
 
 def _verified(data: bytes, item: Item) -> bool:
@@ -199,9 +222,10 @@ def outcome(item: Item, result: Classification, latency_ms: float) -> Outcome:
 def evaluate(service: ClassificationService, items: list[Item], cache_dir: Path) -> Report:
     report = Report(model=service.model_name, images=len(items))
     for item in items:
-        data = fetch(item, cache_dir)
-        if data is None:
-            report.unavailable.append(item.title)
+        try:
+            data = fetch(item, cache_dir)
+        except Unavailable as exc:
+            report.unavailable.append(f"{item.title} ({exc})")
             continue
         started = time.perf_counter()
         result = service.classify(data)

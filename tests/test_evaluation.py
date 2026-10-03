@@ -1,5 +1,6 @@
 import copy
 import hashlib
+import urllib.error
 from pathlib import Path
 
 import pytest
@@ -108,7 +109,7 @@ def test_changed_upstream_file_is_unavailable_and_not_cached(
 
     report = evaluate(small_service(), [item], tmp_path)
 
-    assert report.unavailable == ["File:x.jpg"]
+    assert report.unavailable == ["File:x.jpg (upstream file changed (SHA-256 mismatch))"]
     assert report.scored == 0
     assert not cached.exists(), "a mismatched file must not stay in the cache"
 
@@ -129,7 +130,7 @@ def test_deleted_upstream_file_is_unavailable_not_a_crash(
 
     report = evaluate(small_service(), [item], tmp_path)
 
-    assert report.unavailable == ["File:gone.jpg"]
+    assert report.unavailable == ["File:gone.jpg (HTTP 404)"]
 
 
 def test_bad_cache_entry_is_replaced_by_a_verified_download(
@@ -168,3 +169,52 @@ def test_frozen_manifest_is_complete_and_licensed() -> None:
 @pytest.mark.parametrize("topics", [("animal",), ("person", "animal")])
 def test_outcome_hit_logic(topics: tuple[str, ...]) -> None:
     assert outcome(topics, "animal").hit
+
+
+def test_rate_limits_are_retried_with_retry_after(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    good = make_image()
+    item = Item(
+        "File:x.jpg",
+        "https://invalid.example/x.jpg",
+        hashlib.sha256(good).hexdigest(),
+        ("animal",),
+        "CC0",
+        "x",
+    )
+    responses: list[object] = [
+        urllib.error.HTTPError(item.url, 429, "Too Many Requests", {"Retry-After": "7"}, None),  # type: ignore[arg-type]
+        urllib.error.URLError("connection reset"),
+        FakeResponse(good),
+    ]
+    sleeps: list[float] = []
+
+    def urlopen(*args: object, **kwargs: object) -> object:
+        response = responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    monkeypatch.setattr("aurora_images.evaluation.urllib.request.urlopen", urlopen)
+    monkeypatch.setattr("aurora_images.evaluation.time.sleep", sleeps.append)
+
+    assert fetch(item, tmp_path) == good
+    assert 7.0 in sleeps, "Retry-After is honoured"
+    assert responses == []
+
+
+def test_persistent_rate_limit_becomes_unavailable_with_reason(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    item = Item("File:x.jpg", "https://invalid.example/x.jpg", "0" * 64, ("animal",), "CC0", "x")
+
+    def limited(*args: object, **kwargs: object) -> None:
+        raise urllib.error.HTTPError(item.url, 429, "Too Many Requests", {}, None)  # type: ignore[arg-type]
+
+    monkeypatch.setattr("aurora_images.evaluation.urllib.request.urlopen", limited)
+    monkeypatch.setattr("aurora_images.evaluation.time.sleep", lambda seconds: None)
+
+    report = evaluate(small_service(), [item], tmp_path)
+
+    assert report.unavailable == ["File:x.jpg (HTTP 429)"]
