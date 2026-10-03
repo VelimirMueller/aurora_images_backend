@@ -1,12 +1,22 @@
 import copy
 import hashlib
+import io
 import urllib.error
 from pathlib import Path
 
 import pytest
 import yaml
 
-from aurora_images.evaluation import Item, Outcome, Report, evaluate, fetch, load_manifest
+from aurora_images.evaluation import (
+    Item,
+    Outcome,
+    Report,
+    dhash,
+    evaluate,
+    fetch,
+    load_manifest,
+    same_picture,
+)
 from aurora_images.service import ClassificationService
 from aurora_images.taxonomy import Taxonomy
 from tests.conftest import SMALL_TAXONOMY, FakeClassifier, make_image
@@ -109,7 +119,7 @@ def test_changed_upstream_file_is_unavailable_and_not_cached(
 
     report = evaluate(small_service(), [item], tmp_path)
 
-    assert report.unavailable == ["File:x.jpg (upstream file changed (SHA-256 mismatch))"]
+    assert report.unavailable == ["File:x.jpg (upstream file changed (SHA-256 and dHash mismatch))"]
     assert report.scored == 0
     assert not cached.exists(), "a mismatched file must not stay in the cache"
 
@@ -218,3 +228,72 @@ def test_persistent_rate_limit_becomes_unavailable_with_reason(
     report = evaluate(small_service(), [item], tmp_path)
 
     assert report.unavailable == ["File:x.jpg (HTTP 429)"]
+
+
+def reencode(data: bytes, quality: int, width: int | None = None) -> bytes:
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(data)).convert("RGB")
+    if width:
+        image = image.resize((width, round(image.height * width / image.width)))
+    out = io.BytesIO()
+    image.save(out, "JPEG", quality=quality)
+    return out.getvalue()
+
+
+def striped(size: tuple[int, int] = (320, 240), flip: bool = False) -> bytes:
+    from PIL import Image, ImageDraw
+
+    image = Image.new("RGB", size, "white")
+    draw = ImageDraw.Draw(image)
+    for x in range(0, size[0], 40):
+        draw.rectangle([x, 0, x + 19, size[1]], fill="black")
+    if flip:
+        image = image.transpose(Image.Transpose.FLIP_TOP_BOTTOM).rotate(90, expand=False)
+    out = io.BytesIO()
+    image.save(out, "JPEG", quality=95)
+    return out.getvalue()
+
+
+def test_reencoded_same_picture_is_scored_and_reported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = striped()
+    item = Item(
+        "File:x.jpg",
+        "https://invalid.example/x.jpg",
+        hashlib.sha256(original).hexdigest(),
+        ("animal",),
+        "CC0",
+        "x",
+        dhash(original),
+    )
+    other_bytes = reencode(original, quality=60, width=200)
+    assert other_bytes != original
+    monkeypatch.setattr(
+        "aurora_images.evaluation.urllib.request.urlopen", lambda *a, **k: FakeResponse(other_bytes)
+    )
+    monkeypatch.setattr("aurora_images.evaluation.time.sleep", lambda seconds: None)
+
+    report = evaluate(small_service(), [item], tmp_path)
+
+    assert report.scored == 1
+    assert report.reencoded == ["File:x.jpg"]
+    assert "1 re-encoded upstream" in report.markdown()
+
+
+def test_a_different_picture_is_rejected_even_with_a_dhash(tmp_path: Path) -> None:
+    original = striped()
+    item = Item(
+        "File:x.jpg",
+        "https://invalid.example/x.jpg",
+        hashlib.sha256(original).hexdigest(),
+        ("animal",),
+        "CC0",
+        "x",
+        dhash(original),
+    )
+
+    assert same_picture(reencode(original, quality=50), item)
+    assert not same_picture(striped(flip=True), item)
+    assert not same_picture(b"<html>error</html>", item)

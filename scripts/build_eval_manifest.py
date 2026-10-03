@@ -23,6 +23,8 @@ from pathlib import Path
 
 import yaml
 
+from aurora_images.evaluation import dhash
+
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "eval" / "manifest.yaml"
 IMAGES = ROOT / "eval" / "images"
@@ -221,6 +223,7 @@ def main() -> None:
                 {
                     **item,
                     "sha256": digest,
+                    "dhash": dhash(data),
                     "query": query,
                     "topics": [topic, *(review if isinstance(review, list) else [])],
                 }

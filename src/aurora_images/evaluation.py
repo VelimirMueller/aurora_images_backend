@@ -1,6 +1,7 @@
 """Score a classification service against a manifest of images with accepted root topics."""
 
 import hashlib
+import io
 import math
 import time
 import urllib.error
@@ -12,10 +13,15 @@ from typing import Any
 
 import numpy as np
 import yaml
+from PIL import Image, UnidentifiedImageError
 
 from aurora_images.service import Classification, ClassificationService
 
 USER_AGENT = "aurora-images-eval/0.1 (https://github.com/VelimirMueller/aurora_images_backend)"
+# Wikimedia renders thumbnails per data centre, so the same picture can arrive with other bytes.
+# A 64-bit difference hash tells "same picture, re-encoded" from "different picture":
+# re-encodes/resizes of the 58 eval images differ by at most 6 bits, distinct images by >= 15.
+DHASH_MAX_DISTANCE = 8
 
 
 @dataclass(frozen=True)
@@ -26,6 +32,7 @@ class Item:
     topics: tuple[str, ...]  # accepted root topics; the first is the main one
     license: str
     author: str
+    dhash: str | None = None  # hex; lets a re-encoded but identical picture through
 
 
 @dataclass(frozen=True)
@@ -52,6 +59,7 @@ class Report:
     model: str
     images: int
     unavailable: list[str] = field(default_factory=list)
+    reencoded: list[str] = field(default_factory=list)  # same picture, other bytes upstream
     outcomes: list[Outcome] = field(default_factory=list)
 
     @property
@@ -103,6 +111,7 @@ class Report:
             "images": self.images,
             "scored": self.scored,
             "unavailable": self.unavailable,
+            "reencoded": self.reencoded,
             "topic_accuracy": round(self.topic_accuracy, 4),
             "topic_accuracy_95ci": list(self.topic_accuracy_interval()),
             "topic_accuracy_top3": round(self.topic_accuracy_top3, 4),
@@ -121,7 +130,12 @@ class Report:
             f"({sum(o.hit for o in self.outcomes)}/{self.scored}, 95 % CI "
             f"{low:.1%}-{high:.1%}), in top 3: {self.topic_accuracy_top3:.1%}",
             f"- Images scored: {self.scored}/{self.images}"
-            + (f" ({len(self.unavailable)} unavailable)" if self.unavailable else ""),
+            + (f" ({len(self.unavailable)} unavailable)" if self.unavailable else "")
+            + (
+                f", {len(self.reencoded)} re-encoded upstream (same picture by dHash)"
+                if self.reencoded
+                else ""
+            ),
             f"- Latency per image: mean {mean} ms, p95 {p95} ms",
             "",
             "| Topic | Hits |",
@@ -149,6 +163,7 @@ def load_manifest(path: Path) -> list[Item]:
             topics=tuple(entry["topics"]),
             license=entry["license"],
             author=entry["author"],
+            dhash=entry.get("dhash"),
         )
         for entry in document["images"]
     ]
@@ -161,6 +176,26 @@ class Unavailable(Exception):
 _RETRY_STATUS = {429, 500, 502, 503, 504}
 
 
+def dhash(data: bytes) -> str:
+    """64-bit difference hash of the picture (grayscale 9x8, left > right), as hex."""
+    with Image.open(io.BytesIO(data)) as image:
+        small = image.convert("L").resize((9, 8), Image.Resampling.LANCZOS)
+    pixels = np.asarray(small, dtype=np.int16)
+    bits = (pixels[:, :-1] > pixels[:, 1:]).flatten()
+    return f"{int(''.join('1' if b else '0' for b in bits), 2):016x}"
+
+
+def same_picture(data: bytes, item: Item) -> bool:
+    if item.dhash is None:
+        return False
+    try:
+        actual = dhash(data)
+    except (UnidentifiedImageError, OSError):
+        return False  # not even an image (truncated download, error page)
+    distance = bin(int(actual, 16) ^ int(item.dhash, 16)).count("1")
+    return distance <= DHASH_MAX_DISTANCE
+
+
 def fetch(item: Item, cache_dir: Path, *, attempts: int = 4, pause: float = 0.3) -> bytes:
     """Return the verified image bytes, or raise Unavailable with the reason.
 
@@ -171,12 +206,12 @@ def fetch(item: Item, cache_dir: Path, *, attempts: int = 4, pause: float = 0.3)
     path = cache_dir / f"{item.sha256[:16]}.jpg"
     if path.is_file():
         data = path.read_bytes()
-        if _verified(data, item):
+        if _verified(data, item) or same_picture(data, item):
             return data
         path.unlink()
     downloaded = _download(item.url, attempts, pause)
-    if not _verified(downloaded, item):
-        raise Unavailable("upstream file changed (SHA-256 mismatch)")
+    if not (_verified(downloaded, item) or same_picture(downloaded, item)):
+        raise Unavailable("upstream file changed (SHA-256 and dHash mismatch)")
     cache_dir.mkdir(parents=True, exist_ok=True)
     path.write_bytes(downloaded)
     return downloaded
@@ -227,6 +262,8 @@ def evaluate(service: ClassificationService, items: list[Item], cache_dir: Path)
         except Unavailable as exc:
             report.unavailable.append(f"{item.title} ({exc})")
             continue
+        if not _verified(data, item):
+            report.reencoded.append(item.title)
         started = time.perf_counter()
         result = service.classify(data)
         report.outcomes.append(outcome(item, result, (time.perf_counter() - started) * 1000))
