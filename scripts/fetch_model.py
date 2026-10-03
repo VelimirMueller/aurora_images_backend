@@ -2,7 +2,7 @@
 
 Weights are not committed to git. URLs are pinned to a revision and every file is checked.
 
-Usage: uv run python scripts/fetch_model.py [siglip] [mobilenet]   (default: both, ~700 MB)
+Usage: uv run python scripts/fetch_model.py [siglip] [mobilenet]   (default: both, ~1.5 GB)
 """
 
 import argparse
@@ -25,9 +25,9 @@ ARTIFACTS = {
             f"{SIGLIP}/onnx/vision_model.onnx",
             "c0573e3f4140c3a7c4e9cc5912bd6b26a033b46a6a8e8af26cbea262b163bcad",
         ),
-        "siglip2-base-patch16-224/text_model_quantized.onnx": (
-            f"{SIGLIP}/onnx/text_model_quantized.onnx",
-            "3a0603d3a00c05a80a6ded4743c16aaac7b1e62cdcc7e362e7ce418659b96400",
+        "siglip2-base-patch16-224/text_model.onnx": (
+            f"{SIGLIP}/onnx/text_model.onnx",
+            "baf12d941beabafafb14f7b4adb38dc15be18681b964a84410ec53d9d65e6293",
         ),
         "siglip2-base-patch16-224/tokenizer.json": (
             f"{SIGLIP}/tokenizer.json",

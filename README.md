@@ -28,7 +28,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.12.
 
 ```bash
 uv sync                                  # install runtime + dev dependencies from uv.lock
-uv run python scripts/fetch_model.py     # both backends, pinned + SHA-256 verified (~700 MB)
+uv run python scripts/fetch_model.py     # both backends, pinned + SHA-256 verified (~1.5 GB)
                                          # or: fetch_model.py siglip | fetch_model.py mobilenet
 uv run uvicorn aurora_images.main:create_app --factory --reload
 ```
@@ -164,16 +164,26 @@ If the model files are missing, the service still starts: `/health` reports
 
 | `AURORA_BACKEND` | Model | Labels | Inference (CPU) | Weights |
 |---|---|---|---|---|
-| `siglip` (default) | SigLIP 2 base/16, 224 px: fp32 image tower, int8 text tower | any text | ~30 ms | ~690 MB |
+| `siglip` (default) | SigLIP 2 base/16, 224 px, fp32 image and text towers | any text | ~30 ms | ~1.5 GB |
 | `mobilenet` | MobileNetV2-12 | 1000 ImageNet classes | ~5 ms | 14 MB |
 
 The build-time label cache covers the packaged taxonomy. With a custom
 `AURORA_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
 `AURORA_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
-The Docker image is about 1.8 GB. The container is ready in about 1.5 s and uses about 690 MB of
-RAM with the SigLIP backend (measured 2026-10-02). The text tower runs only when label texts change (cache miss). It is dropped from memory
-afterwards. The image tower is fp32 on purpose: in a spike the int8 version misread an
-aurora painting as a boat.
+The text tower runs only when label texts change (a cache miss): about 9 s for 1068 labels
+with a ~3.2 GB memory peak (the fp32 Gemma vocabulary table alone is 786 MB), and then it is
+dropped. Docker images ship with the cache built, so containers never load it unless you use a
+custom taxonomy. In that case, give the first start about 4 GB of memory and mount the cache
+directory. With the int8 text tower the image was 1.77 GB and the container was ready in
+1.5 s using ~690 MB of RAM (2026-10-02). The fp32 text tower adds ~850 MB to the image; size
+and RSS have not been re-measured since that change.
+
+Both towers are **fp32 on purpose**:
+- In a spike, the int8 image tower misread an aurora painting as a boat.
+- The int8 text tower is accurate on ARM (cosine 0.996 to fp32) but not on x86 servers
+  without VNNI (mean 0.959, min 0.872). On the x86 CI runner that dropped root-topic accuracy
+  from 93.1 % to 83.0 %.
+- fp32 gives identical embeddings on every architecture.
 
 ## Evaluation
 
@@ -228,6 +238,7 @@ All settings are environment variables with the `AURORA_` prefix. See [`.env.exa
 | `AURORA_LABEL_CACHE_DIR`  | `models/label_cache`                           |
 | `AURORA_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
 | `AURORA_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
+| `AURORA_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
 | `AURORA_TOP_K`            | `5`                                            |
 | `AURORA_TOPIC_MIN_SCORE`  | `0.05`                                         |
 | `AURORA_UNCERTAIN_BELOW`  | `0.5`                                          |

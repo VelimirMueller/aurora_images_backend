@@ -29,6 +29,9 @@ class Settings(BaseSettings):
         default=None,
         description="Topic tree YAML; None uses the packaged taxonomy for the backend.",
     )
+    ort_threads: int = Field(
+        default=0, ge=0, description="Threads per ONNX Runtime session; 0 = ORT default."
+    )
     top_k: int = Field(default=5, ge=1, le=20)
     topic_min_score: float = Field(default=0.05, ge=0, le=1)
     uncertain_below: float = Field(
