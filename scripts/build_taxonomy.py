@@ -17,7 +17,7 @@ from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset
 
 ROOT = Path(__file__).resolve().parent.parent
-CLASS_INDEX = ROOT / "scripts" / "imagenet_class_index.json"  # index -> [wnid, keras name]
+CLASS_INDEX = ROOT / "models" / "imagenet_class_index.json"  # index -> [wnid, keras name]
 DISPLAY_NAMES = ROOT / "models" / "imagenet_classes.txt"  # index -> human-readable name
 OUTPUT = ROOT / "src" / "aurora_images" / "data" / "taxonomy.yaml"
 
@@ -249,12 +249,30 @@ def main() -> None:
         "labels": labels,
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(yaml.safe_dump(document, sort_keys=False, allow_unicode=True))
+    write(document)
 
     counts = Counter(label["topic"] for label in labels)
     print(f"wrote {OUTPUT.relative_to(ROOT)}: {len(labels)} labels")
     for topic, _, _ in TOPICS:
         print(f"  {counts.get(topic, 0):4}  {topic}")
+
+
+def write(document: dict[str, object]) -> None:
+    """One topic or label per line, so the file greps well and diffs show single labels."""
+
+    def line(item: object) -> str:
+        flow = yaml.safe_dump(item, default_flow_style=True, sort_keys=False, width=1_000_000)
+        return "  - " + flow.strip()
+
+    head = {k: v for k, v in document.items() if k not in ("topics", "labels")}
+    header = yaml.safe_dump(head, sort_keys=False, width=100)
+    topics = document["topics"]
+    labels = document["labels"]
+    if not isinstance(topics, list) or not isinstance(labels, list):
+        raise SystemExit("document needs 'topics' and 'labels' lists")
+    body = ["topics:", *map(line, topics), "labels:", *map(line, labels)]
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT.write_text(header + "\n".join(body) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -18,10 +18,15 @@ ARTIFACTS = {
         "https://github.com/onnx/models/raw/main/validated/vision/classification/mobilenet/model/mobilenetv2-12.onnx",
         "c0c3f76d93fa3fd6580652a45618618a220fced18babf65774ed169de0432ad5",
     ),
-    # Display names; only scripts/build_taxonomy.py reads this, the server uses taxonomy.yaml.
+    # Display names and synset ids; only scripts/build_taxonomy.py reads these, the server
+    # uses taxonomy.yaml.
     "imagenet_classes.txt": (
         "https://raw.githubusercontent.com/pytorch/hub/master/imagenet_classes.txt",
         "1f386e0d1cb6e28b9c2dac651c3dea6801e98ad1b41a14ce6bb1a093d72069f5",
+    ),
+    "imagenet_class_index.json": (
+        "https://storage.googleapis.com/download.tensorflow.org/data/imagenet_class_index.json",
+        "a1e7a966a1f601d39e4b43e119b3e7dd4a2ad3ea08cf69847cbaf021013767bc",
     ),
 }
 
