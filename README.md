@@ -195,10 +195,12 @@ checked by eye. Mixed images accept more than one topic (a girl hugging her dog:
 
 | Backend | Root-topic accuracy | 95 % interval (Wilson) | In top 3 | Latency/image |
 |---|---|---|---|---|
-| `siglip` | **93.1 %** (54/58) | 83.6–97.3 % | 98.3 % | 35 ms mean, 41 ms p95 |
-| `mobilenet` | 70.7 % (41/58) | 58.0–80.8 % | 84.5 % | 7 ms mean, 10 ms p95 |
+| `siglip` | **93.1 %** (54/58) | 83.6–97.3 % | 98.3 % | 32 ms (M-series), 227 ms (4-vCPU x86 CI runner) |
+| `mobilenet` | 70.7 % (41/58) | 58.0–80.8 % | 84.5 % | 7 ms (M-series) |
 
-Measured 2026-10-02 on an M-series CPU. The intervals do not overlap, so the difference holds
+Measured 2026-10-03. SigLIP scores the same on ARM (M-series) and x86 (GitHub runner), with the
+same four misses. That took the fp32 text tower: with int8 it fell to 83.0 % on x86 (see
+[Backends](#backends)). Latency depends heavily on the CPU. The intervals do not overlap, so the difference holds
 even on 58 images. CI runs the eval on every PR and on pushes to `main`/`dev` and fails below 90 % for SigLIP. The
 report is in the job summary.
 
@@ -217,10 +219,14 @@ What the misses show:
 - MobileNet reads painted portraits as clothing and maps as jigsaw puzzles (1.00). Those are
   the limits of a closed 1000-class model.
 
-Images are cached in `eval/images/` (in CI: an Actions cache keyed by the manifest). Only bytes
-that match the manifest's SHA-256 are cached. If Commons re-renders or deletes a thumbnail, that
-image is reported as *unavailable* instead of being scored, and the gate fails once more than
-10 % are unavailable. The fix is then to rebuild the set: `scripts/build_eval_manifest.py
+Images are cached in `eval/images/` (in CI: an Actions cache keyed by the manifest). Wikimedia
+renders thumbnails per data centre, so GitHub's runners receive other JPEG bytes for 5 of the 58
+pictures than a client in Europe. Every entry therefore carries both a SHA-256 and a 64-bit
+difference hash. A download is accepted when the bytes match, or when the dHash is within 8 bits
+(re-encodes differ by at most 6, distinct images by at least 15). Re-encoded images are listed in
+the report. Downloads are paced and retried on 429/5xx. Anything else, such as a deleted file,
+is reported as *unavailable* with its reason, and the gate fails once more than 10 % are
+unavailable. The fix is then to rebuild the set: `scripts/build_eval_manifest.py
 --force` followed by a new visual review, because Commons search order drifts between runs.
 
 ## Configuration
