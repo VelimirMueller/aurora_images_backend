@@ -22,7 +22,7 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen
       - name: Cache model
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: models
           key: models-${{ hashFiles('scripts/fetch_model.py') }}
@@ -32,7 +32,7 @@ jobs:
       - run: uv run mypy
       - run: uv run pytest
       - name: Cache eval images
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: eval/images
           key: eval-images-${{ hashFiles('eval/manifest.yaml') }}
