@@ -11,7 +11,7 @@ import io
 import logging
 import os
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Protocol
 
@@ -146,6 +146,19 @@ class LabelEmbeddingCache:
         tmp.replace(final)  # atomic: a concurrent reader never sees half a file
 
 
+TextEmbedder = Callable[[list[str]], npt.NDArray[np.float32]]
+
+
+def label_texts(taxonomy: Taxonomy) -> list[str]:
+    """The text each label is scored by. Two labels with one text would get one embedding and
+    split its probability; that is a taxonomy bug, so it raises instead of degrading."""
+    texts = [PROMPT_TEMPLATE.format(label.text) for label in taxonomy.labels]
+    duplicates = sorted(text for text, count in Counter(texts).items() if count > 1)
+    if duplicates:
+        raise TaxonomyError(f"labels share a text (set a distinct name or prompt): {duplicates}")
+    return texts
+
+
 class SiglipClassifier:
     model_name = MODEL_NAME
 
@@ -154,24 +167,24 @@ class SiglipClassifier:
         vision: Session,
         label_embeddings: npt.NDArray[np.float32],
         logit_scale: float = LOGIT_SCALE,
+        *,
+        texts: list[str] | None = None,
+        embed_texts: TextEmbedder | None = None,
+        cache: LabelEmbeddingCache | None = None,
     ) -> None:
         self._vision = vision
         self._labels = normalize(label_embeddings)
         self._scale = logit_scale
+        self._texts = texts or []
+        self._embed_texts = embed_texts
+        self._cache = cache
         self.num_classes = len(label_embeddings)
 
     @classmethod
     def from_dir(
         cls, model_dir: Path, taxonomy: Taxonomy, cache_dir: Path, threads: int = 0
     ) -> "SiglipClassifier":
-        texts = [PROMPT_TEMPLATE.format(label.text) for label in taxonomy.labels]
-        # Two labels with one text get one embedding and split its probability; that is a
-        # taxonomy bug, so it fails startup instead of degrading to 503.
-        duplicates = sorted(text for text, count in Counter(texts).items() if count > 1)
-        if duplicates:
-            raise TaxonomyError(
-                f"labels share a text (set a distinct name or prompt): {duplicates}"
-            )
+        texts = label_texts(taxonomy)
         missing = [
             f for f in (VISION_FILE, TEXT_FILE, TOKENIZER_FILE) if not (model_dir / f).is_file()
         ]
@@ -180,19 +193,52 @@ class SiglipClassifier:
                 f"SigLIP files missing in {model_dir} ({', '.join(missing)}); "
                 "run scripts/fetch_model.py"
             )
-        vision = _session(model_dir / VISION_FILE, threads)
-        cache = LabelEmbeddingCache(cache_dir, _fingerprint(model_dir))
-        embeddings = cache.load(texts, width=_embedding_width(vision))
-        if embeddings is None:
-            logger.info("embedding %d labels with the SigLIP text tower", len(texts))
+
+        def embed_texts(new_texts: list[str]) -> npt.NDArray[np.float32]:
+            logger.info("embedding %d label texts with the SigLIP text tower", len(new_texts))
             encoder = TextEncoder(
                 Tokenizer.from_file(str(model_dir / TOKENIZER_FILE)),
                 lambda: _session(model_dir / TEXT_FILE, threads),
             )
-            embeddings = encoder.embed(texts)
-            encoder.close()
+            try:
+                return encoder.embed(new_texts)
+            finally:
+                encoder.close()  # the text tower peaks at ~3 GB; never keep it resident
+
+        vision = _session(model_dir / VISION_FILE, threads)
+        cache = LabelEmbeddingCache(cache_dir, _fingerprint(model_dir))
+        embeddings = cache.load(texts, width=_embedding_width(vision))
+        if embeddings is None:
+            embeddings = embed_texts(texts)
             cache.store(texts, embeddings)
-        return cls(vision, embeddings)
+        return cls(vision, embeddings, texts=texts, embed_texts=embed_texts, cache=cache)
+
+    def for_taxonomy(self, taxonomy: Taxonomy) -> "SiglipClassifier":
+        """A classifier for a changed label set: known texts keep their embedding, only new
+        texts go through the text tower. The image session is shared, self is unchanged."""
+        texts = label_texts(taxonomy)
+        # Without the texts behind the current rows nothing can be reused.
+        known = (
+            dict(zip(self._texts, self._labels, strict=True))
+            if len(self._texts) == len(self._labels)
+            else {}
+        )
+        new = [text for text in texts if text not in known]
+        if new:
+            if self._embed_texts is None:
+                raise ModelNotAvailableError("no text tower to embed new labels")
+            known.update(zip(new, self._embed_texts(new), strict=True))
+        embeddings = np.stack([known[text] for text in texts]).astype(np.float32)
+        if self._cache is not None:
+            self._cache.store(texts, embeddings)
+        return SiglipClassifier(
+            self._vision,
+            embeddings,
+            self._scale,
+            texts=texts,
+            embed_texts=self._embed_texts,
+            cache=self._cache,
+        )
 
     def embed_image(self, data: bytes) -> npt.NDArray[np.float32]:
         (pooled,) = self._vision.run(["pooler_output"], {"pixel_values": preprocess(data)})

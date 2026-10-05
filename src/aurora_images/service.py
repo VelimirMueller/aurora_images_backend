@@ -58,6 +58,23 @@ class ClassificationService:
     def model_name(self) -> str:
         return self.classifier.model_name
 
+    @property
+    def supports_runtime_labels(self) -> bool:
+        return callable(getattr(self.classifier, "for_taxonomy", None))
+
+    def with_taxonomy(self, taxonomy: Taxonomy) -> "ClassificationService":
+        """A new service for a changed label set; self keeps serving until it is swapped out."""
+        if not self.supports_runtime_labels:
+            raise TaxonomyError(f"{self.model_name} has a fixed label set")
+        classifier: Classifier = self.classifier.for_taxonomy(taxonomy)  # type: ignore[attr-defined]
+        return ClassificationService(
+            classifier,
+            taxonomy,
+            top_k=self._top_k,
+            topic_min_score=self._topic_min_score,
+            uncertain_below=self._uncertain_below,
+        )
+
     def classify(self, data: bytes) -> Classification:
         started = time.perf_counter()
         probabilities = self.classifier.predict(data)

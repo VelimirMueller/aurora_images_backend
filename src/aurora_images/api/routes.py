@@ -6,15 +6,19 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from starlette.concurrency import run_in_threadpool
 
 from aurora_images.config import Settings, get_settings
+from aurora_images.feedback import FeedbackStore
 from aurora_images.images import (
     InvalidImageError,
     UploadTooLargeError,
     ValidatedImage,
+    dhash,
     read_limited,
     validate_image,
 )
+from aurora_images.runtime_labels import signature
 from aurora_images.schemas import (
     ClassificationOut,
+    CorrectionOut,
     ErrorOut,
     HealthOut,
     ImageInfo,
@@ -23,7 +27,7 @@ from aurora_images.schemas import (
     ModelInfo,
     TopicOut,
 )
-from aurora_images.service import ClassificationService, ScoredLabel, ScoredTopic
+from aurora_images.service import Classification, ClassificationService, ScoredLabel, ScoredTopic
 from aurora_images.storage import ImageStorage
 
 router = APIRouter()
@@ -39,10 +43,26 @@ def get_storage(request: Request) -> ImageStorage:
     return storage
 
 
-def get_service(request: Request) -> ClassificationService:
-    service: ClassificationService | None = request.app.state.service
+async def get_service(request: Request) -> ClassificationService:
+    """The current service. With several worker processes, a label change made by another
+    worker shows up as a changed overlay file; this worker then rebuilds from the shared
+    embedding cache (no text tower needed) before serving."""
+    state = request.app.state
+    service: ClassificationService | None = state.service
     if service is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "classification model not loaded")
+    if (
+        service.supports_runtime_labels
+        and signature(state.runtime_labels.overlay) != state.overlay_signature
+    ):
+        async with state.admin_lock:
+            seen = signature(state.runtime_labels.overlay)
+            if seen != state.overlay_signature:
+                current: ClassificationService = state.service
+                taxonomy = state.runtime_labels.load(state.load_base_taxonomy)
+                state.service = await run_in_threadpool(current.with_taxonomy, taxonomy)
+                state.overlay_signature = seen
+        service = state.service
     return service
 
 
@@ -106,6 +126,7 @@ async def classify_image(
     the topic scores, where a topic's score is the summed probability of every label below it.
     """
     result = await run_in_threadpool(service.classify, image.data)
+    correction = await run_in_threadpool(_correction, request, service, image.data, result)
     total_ms = round((time.perf_counter() - request.state.started) * 1000, 2)
     return ClassificationOut(
         request_id=request.state.request_id,
@@ -122,7 +143,31 @@ async def classify_image(
         labels=[_label_out(label) for label in result.labels],
         topics=[_topic_out(topic) for topic in result.topics],
         uncertain=result.uncertain,
+        correction=correction,
         timings_ms={**result.timings_ms, "total": total_ms},
+    )
+
+
+def _correction(
+    request: Request, service: ClassificationService, data: bytes, result: Classification
+) -> CorrectionOut | None:
+    store: FeedbackStore | None = request.app.state.feedback
+    if store is None:
+        return None
+    store.refresh()
+    if len(store) == 0:
+        return None
+    taxonomy = service.taxonomy
+    recall = store.recall(dhash(data), {label.id for label in taxonomy.labels})
+    if recall is None:
+        return None
+    label = taxonomy.label(recall.feedback.label_id)
+    assert label is not None  # recall() only returns ids present in the taxonomy  # noqa: S101
+    score = next((s.score for s in result.labels if s.label.id == label.id), 0.0)
+    return CorrectionOut(
+        feedback_id=recall.feedback.id,
+        label=_label_out(ScoredLabel(label, score, taxonomy.label_path(label))),
+        distance=recall.distance,
     )
 
 

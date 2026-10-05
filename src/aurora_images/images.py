@@ -3,6 +3,7 @@
 import io
 from dataclasses import dataclass
 
+import numpy as np
 from fastapi import UploadFile
 from PIL import Image, UnidentifiedImageError
 
@@ -55,3 +56,17 @@ def validate_image(data: bytes, max_pixels: int) -> ValidatedImage:
     except (UnidentifiedImageError, OSError, SyntaxError, Image.DecompressionBombError) as exc:
         raise InvalidImageError("file is not a valid image") from exc
     return ValidatedImage(data, fmt, ALLOWED_FORMATS[fmt], width, height)
+
+
+def dhash(data: bytes) -> str:
+    """64-bit difference hash of the picture (grayscale 9x8, left > right), as hex."""
+    with Image.open(io.BytesIO(data)) as image:
+        small = image.convert("L").resize((9, 8), Image.Resampling.LANCZOS)
+    pixels = np.asarray(small, dtype=np.int16)
+    bits = (pixels[:, :-1] > pixels[:, 1:]).flatten()
+    return f"{int(''.join('1' if b else '0' for b in bits), 2):016x}"
+
+
+def dhash_distance(a: str, b: str) -> int:
+    """Number of differing bits between two hex dHashes."""
+    return (int(a, 16) ^ int(b, 16)).bit_count()

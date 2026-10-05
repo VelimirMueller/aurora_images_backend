@@ -1,7 +1,6 @@
 """Score a classification service against a manifest of images with accepted root topics."""
 
 import hashlib
-import io
 import math
 import time
 import urllib.error
@@ -13,8 +12,9 @@ from typing import Any
 
 import numpy as np
 import yaml
-from PIL import Image, UnidentifiedImageError
+from PIL import UnidentifiedImageError
 
+from aurora_images.images import dhash, dhash_distance
 from aurora_images.service import Classification, ClassificationService
 
 USER_AGENT = "aurora-images-eval/0.1 (https://github.com/VelimirMueller/aurora_images_backend)"
@@ -176,15 +176,6 @@ class Unavailable(Exception):
 _RETRY_STATUS = {429, 500, 502, 503, 504}
 
 
-def dhash(data: bytes) -> str:
-    """64-bit difference hash of the picture (grayscale 9x8, left > right), as hex."""
-    with Image.open(io.BytesIO(data)) as image:
-        small = image.convert("L").resize((9, 8), Image.Resampling.LANCZOS)
-    pixels = np.asarray(small, dtype=np.int16)
-    bits = (pixels[:, :-1] > pixels[:, 1:]).flatten()
-    return f"{int(''.join('1' if b else '0' for b in bits), 2):016x}"
-
-
 def same_picture(data: bytes, item: Item) -> bool:
     if item.dhash is None:
         return False
@@ -192,8 +183,7 @@ def same_picture(data: bytes, item: Item) -> bool:
         actual = dhash(data)
     except (UnidentifiedImageError, OSError):
         return False  # not even an image (truncated download, error page)
-    distance = bin(int(actual, 16) ^ int(item.dhash, 16)).count("1")
-    return distance <= DHASH_MAX_DISTANCE
+    return dhash_distance(actual, item.dhash) <= DHASH_MAX_DISTANCE
 
 
 def fetch(item: Item, cache_dir: Path, *, attempts: int = 4, pause: float = 0.3) -> bytes:

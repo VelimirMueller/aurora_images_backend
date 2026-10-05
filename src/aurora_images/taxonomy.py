@@ -40,6 +40,7 @@ class Taxonomy:
         self.version = version
         self.topics = _build_topics(topics)
         self.labels = _build_labels(labels, self.topics)
+        self._by_id = {label.id: label for label in self.labels}
         # membership[t, l] = 1 when label l sits under topic t or any of its descendants.
         self._topic_ids = list(self.topics)
         row = {topic_id: i for i, topic_id in enumerate(self._topic_ids)}
@@ -62,6 +63,9 @@ class Taxonomy:
             return cls(document["topics"], document["labels"], int(document.get("version", 1)))
         except (KeyError, TypeError, ValueError) as exc:
             raise TaxonomyError(f"{source} has a malformed entry: {exc!r}") from exc
+
+    def label(self, label_id: str) -> Label | None:
+        return self._by_id.get(label_id)
 
     def label_path(self, label: Label) -> list[str]:
         return [*self.topics[label.topic].path, label.name]
