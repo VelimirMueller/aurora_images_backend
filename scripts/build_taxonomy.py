@@ -1,8 +1,12 @@
-"""Generate src/aurora_images/data/taxonomy.yaml from WordNet.
+"""Generate the packaged taxonomies from WordNet.
 
-Every ImageNet-1k class is a WordNet synset. Each class goes under the topic whose WordNet
-anchor is the *closest* hypernym (breadth-first over all hypernym paths). The output is
-committed and meant to be edited by hand afterwards; rerun only to start over.
+- taxonomy.yaml: the 1000 ImageNet-1k classes, indexed like the MobileNetV2 outputs.
+- taxonomy_open.yaml: the same classes with text prompts, plus open-vocabulary labels
+  ImageNet lacks (hut, skyscraper, smartphone, sunset ...). SigLIP 2 scores these by text.
+
+Every ImageNet class is a WordNet synset. Each class goes under the topic whose WordNet
+anchor is the *closest* hypernym (breadth-first over all hypernym paths). TOPICS, OVERRIDES,
+PROMPTS and OPEN_LABELS below are the source of truth: edit them and rerun.
 
 Usage: uv run python scripts/build_taxonomy.py
 """
@@ -19,7 +23,7 @@ from nltk.corpus.reader.wordnet import Synset
 ROOT = Path(__file__).resolve().parent.parent
 CLASS_INDEX = ROOT / "models" / "imagenet_class_index.json"  # index -> [wnid, keras name]
 DISPLAY_NAMES = ROOT / "models" / "imagenet_classes.txt"  # index -> human-readable name
-OUTPUT = ROOT / "src" / "aurora_images" / "data" / "taxonomy.yaml"
+DATA = ROOT / "src" / "aurora_images" / "data"
 
 # (topic id, parent topic id, WordNet anchors). Parents must be listed before children.
 TOPICS: list[tuple[str, str | None, list[str]]] = [
@@ -188,6 +192,126 @@ OVERRIDES = {
 }
 
 
+# Text prompts by WordNet id, for ImageNet names that are duplicated or ambiguous as text
+# ("mouse" is the animal to a text model, the ImageNet class is the computer mouse).
+# They go to taxonomy_open.yaml as `prompts`. Only for duplicated display names (crane,
+# maillot) does the prompt also replace the name in taxonomy.yaml, so names stay unique.
+PROMPTS = {
+    "n02012849": "crane (bird)",
+    "n03126707": "construction crane",
+    "n03710637": "maillot (dance tights)",
+    "n03710721": "one-piece swimsuit",
+    "n03594734": "jeans",
+    "n13133613": "ear of corn",
+    "n12768682": "rose hip",
+    "n03832673": "notebook computer",
+    "n06359193": "website screenshot",
+    "n07579787": "plate of food",
+    "n01871265": "elephant with tusks",
+    "n03782006": "computer monitor",
+    "n04152593": "computer screen",
+    "n03793489": "computer mouse",
+    "n03337140": "filing cabinet",
+    "n03584829": "clothes iron",
+    "n04554684": "washing machine",
+    "n03930313": "pickaxe",
+    "n04118776": "measuring ruler",
+    "n04372370": "light switch",
+    "n04243546": "slot machine",
+    "n04254680": "cotton swab",
+    "n01847000": "drake (male duck)",
+    "n02389026": "sorrel horse",
+    "n02412080": "ram (sheep)",
+    "n02395406": "hog (pig)",
+    "n02403003": "ox",
+    "n01514859": "hen (chicken)",
+    "n01514668": "rooster",
+    "n01440764": "tench (fish)",
+    "n03595614": "jersey (shirt)",
+    "n04325704": "stole (scarf)",
+    "n03014705": "chest (wooden box)",
+    "n04125021": "safe (strongbox)",
+}
+
+# Extra topics and labels only the open-vocabulary backend can score.
+OPEN_TOPICS: list[tuple[str, str | None]] = [
+    ("art", None),
+    ("document", None),
+    ("sky", "landscape"),
+    ("city", "building and structure"),
+]
+OPEN_LABELS: list[tuple[str, str]] = [
+    ("hut", "building"),
+    ("house", "building"),
+    ("wooden cabin", "building"),
+    ("farmhouse", "building"),
+    ("apartment building", "building"),
+    ("office building", "building"),
+    ("skyscraper", "building"),
+    ("lighthouse", "building"),
+    ("tower", "building and structure"),
+    ("city skyline", "city"),
+    ("street", "city"),
+    ("road", "building and structure"),
+    ("man", "person"),
+    ("woman", "person"),
+    ("child", "person"),
+    ("baby", "person"),
+    ("group of people", "person"),
+    ("crowd", "person"),
+    ("horse", "hoofed mammal"),
+    ("cow", "hoofed mammal"),
+    ("sheep", "hoofed mammal"),
+    ("deer", "hoofed mammal"),
+    ("rabbit", "mammal"),
+    ("chicken", "bird"),
+    ("duck", "bird"),
+    ("motorcycle", "motor vehicle"),
+    ("airplane", "aircraft"),
+    ("helicopter", "aircraft"),
+    ("train", "rail vehicle"),
+    ("tram", "rail vehicle"),
+    ("electric scooter", "vehicle"),
+    ("smartphone", "electronics"),
+    ("tablet computer", "electronics"),
+    ("headphones", "electronics"),
+    ("smartwatch", "electronics"),
+    ("tree", "plant"),
+    ("bouquet of flowers", "flower"),
+    ("grass", "plant"),
+    ("cactus", "plant"),
+    ("houseplant", "plant"),
+    ("forest", "landscape"),
+    ("beach", "landscape"),
+    ("mountain", "landscape"),
+    ("river", "landscape"),
+    ("lake", "landscape"),
+    ("waterfall", "landscape"),
+    ("desert", "landscape"),
+    ("snowy landscape", "landscape"),
+    ("field", "landscape"),
+    ("sunset", "sky"),
+    ("night sky with stars", "sky"),
+    ("aurora borealis", "sky"),
+    ("cloudy sky", "sky"),
+    ("burger", "dish"),
+    ("salad", "dish"),
+    ("cake", "food and drink"),
+    ("sushi", "dish"),
+    ("coffee", "drink"),
+    ("painting", "art"),
+    ("drawing", "art"),
+    ("sculpture", "art"),
+    ("graffiti", "art"),
+    ("text document", "document"),
+    ("screenshot", "document"),
+    ("chart", "document"),
+    ("map", "document"),
+    ("logo", "document"),
+    ("handwriting", "document"),
+]
+
+
 def closest_topic(synset: Synset, anchors: dict[str, str]) -> str | None:
     """Breadth-first up the hypernym graph; the nearest anchor wins.
 
@@ -234,45 +358,85 @@ def main() -> None:
     if unknown:
         raise SystemExit(f"OVERRIDES reference unknown classes or topics: {unknown}")
 
+    # Display names used by more than one class (crane, maillot) get their PROMPTS text as the
+    # name in both files, so every label name is unique.
+    duplicated = {name for name, count in Counter(names).items() if count > 1}
     labels = []
     for i in range(len(index)):
         wnid, keras_name = index[str(i)]
         synset = wn.synset_from_pos_and_offset("n", int(wnid[1:]))
         topic = OVERRIDES.get(keras_name) or closest_topic(synset, anchors) or "object"
-        labels.append({"id": wnid, "name": names[i], "topic": topic, "index": i})
+        if names[i] in duplicated and wnid not in PROMPTS:
+            raise SystemExit(f"{wnid} shares the name {names[i]!r}; add it to PROMPTS")
+        name = PROMPTS[wnid] if names[i] in duplicated else names[i]
+        labels.append({"id": wnid, "name": name, "topic": topic, "index": i})
+    if unknown_prompts := sorted(set(PROMPTS) - {label["id"] for label in labels}):
+        raise SystemExit(f"PROMPTS reference unknown label ids: {unknown_prompts}")
 
-    document = {
-        "version": 1,
-        "source": "ImageNet-1k classes placed under topics by WordNet hypernyms "
-        "(scripts/build_taxonomy.py), then edited by hand",
-        "topics": [{"id": t, "parent": p} for t, p, _ in TOPICS],
-        "labels": labels,
-    }
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    write(document)
+    topics = [{"id": t, "parent": p} for t, p, _ in TOPICS]
+    write(
+        "taxonomy.yaml",
+        "ImageNet-1k classes placed under topics by WordNet hypernyms (scripts/build_taxonomy.py)",
+        topics,
+        labels,
+    )
 
-    counts = Counter(label["topic"] for label in labels)
-    print(f"wrote {OUTPUT.relative_to(ROOT)}: {len(labels)} labels")
-    for topic, _, _ in TOPICS:
-        print(f"  {counts.get(topic, 0):4}  {topic}")
+    # The open taxonomy only adds to taxonomy.yaml; Taxonomy.load merges the two.
+    extra_topics = [{"id": t, "parent": p} for t, p in OPEN_TOPICS]
+    topic_ids = {t["id"] for t in topics} | {t["id"] for t in extra_topics}
+    taken = {str(label["name"]) for label in labels} | topic_ids
+    extra_labels = []
+    for name, topic in OPEN_LABELS:
+        if topic not in topic_ids or name in taken:
+            raise SystemExit(
+                f"open label {name!r}: unknown topic or name clashes with a label/topic"
+            )
+        taken.add(name)
+        extra_labels.append({"id": "open:" + name.replace(" ", "-"), "name": name, "topic": topic})
+    write(
+        "taxonomy_open.yaml",
+        "taxonomy.yaml plus text prompts and open-vocabulary labels, scored by text "
+        "(scripts/build_taxonomy.py)",
+        extra_topics,
+        extra_labels,
+        extends="package:taxonomy.yaml",
+        prompts=PROMPTS,
+    )
 
 
-def write(document: dict[str, object]) -> None:
+def write(
+    filename: str,
+    source: str,
+    topics: list[dict[str, object]],
+    labels: list[dict[str, object]],
+    *,
+    extends: str | None = None,
+    prompts: dict[str, str] | None = None,
+) -> None:
     """One topic or label per line, so the file greps well and diffs show single labels."""
 
-    def line(item: object) -> str:
+    def line(item: dict[str, object]) -> str:
         flow = yaml.safe_dump(item, default_flow_style=True, sort_keys=False, width=1_000_000)
         return "  - " + flow.strip()
 
-    head = {k: v for k, v in document.items() if k not in ("topics", "labels")}
+    head: dict[str, object] = {"version": 1, "source": source}
+    if extends:
+        head["extends"] = extends
     header = yaml.safe_dump(head, sort_keys=False, width=100)
-    topics = document["topics"]
-    labels = document["labels"]
-    if not isinstance(topics, list) or not isinstance(labels, list):
-        raise SystemExit("document needs 'topics' and 'labels' lists")
-    body = ["topics:", *map(line, topics), "labels:", *map(line, labels)]
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(header + "\n".join(body) + "\n", encoding="utf-8")
+    body = []
+    if prompts:
+        body += [
+            "prompts:",
+            *(f"  {key}: {json.dumps(value)}" for key, value in prompts.items()),
+        ]
+    body += ["topics:", *map(line, topics), "labels:", *map(line, labels)]
+    path = DATA / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(header + "\n".join(body) + "\n", encoding="utf-8")
+    counts = Counter(str(label["topic"]) for label in labels)
+    print(f"wrote {path.relative_to(ROOT)}: {len(topics)} topics, {len(labels)} labels")
+    for topic in topics:
+        print(f"  {counts.get(str(topic['id']), 0):4}  {topic['id']}")
 
 
 if __name__ == "__main__":

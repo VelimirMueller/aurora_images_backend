@@ -1,6 +1,5 @@
 version: 1
-source: ImageNet-1k classes placed under topics by WordNet hypernyms (scripts/build_taxonomy.py), then
-  edited by hand
+source: ImageNet-1k classes placed under topics by WordNet hypernyms (scripts/build_taxonomy.py)
 topics:
   - {id: animal, parent: null}
   - {id: mammal, parent: animal}
@@ -190,7 +189,7 @@ labels:
   - {id: n02009229, name: little blue heron, topic: bird, index: 131}
   - {id: n02009912, name: American egret, topic: bird, index: 132}
   - {id: n02011460, name: bittern, topic: bird, index: 133}
-  - {id: n02012849, name: crane, topic: bird, index: 134}
+  - {id: n02012849, name: crane (bird), topic: bird, index: 134}
   - {id: n02013706, name: limpkin, topic: bird, index: 135}
   - {id: n02017213, name: European gallinule, topic: bird, index: 136}
   - {id: n02018207, name: American coot, topic: bird, index: 137}
@@ -573,7 +572,7 @@ labels:
   - {id: n03124043, name: cowboy boot, topic: clothing, index: 514}
   - {id: n03124170, name: cowboy hat, topic: clothing, index: 515}
   - {id: n03125729, name: cradle, topic: furniture, index: 516}
-  - {id: n03126707, name: crane, topic: object, index: 517}
+  - {id: n03126707, name: construction crane, topic: object, index: 517}
   - {id: n03127747, name: crash helmet, topic: clothing, index: 518}
   - {id: n03127925, name: crate, topic: container, index: 519}
   - {id: n03131574, name: crib, topic: furniture, index: 520}
@@ -694,8 +693,8 @@ labels:
   - {id: n03706229, name: magnetic compass, topic: object, index: 635}
   - {id: n03709823, name: mailbag, topic: container, index: 636}
   - {id: n03710193, name: mailbox, topic: container, index: 637}
-  - {id: n03710637, name: maillot, topic: clothing, index: 638}
-  - {id: n03710721, name: maillot, topic: clothing, index: 639}
+  - {id: n03710637, name: maillot (dance tights), topic: clothing, index: 638}
+  - {id: n03710721, name: one-piece swimsuit, topic: clothing, index: 639}
   - {id: n03717622, name: manhole cover, topic: object, index: 640}
   - {id: n03720891, name: maraca, topic: musical instrument, index: 641}
   - {id: n03721384, name: marimba, topic: musical instrument, index: 642}

@@ -99,3 +99,13 @@ def test_onnx_classifier_end_to_end_with_packaged_taxonomy() -> None:
     roots = [t for t in service.taxonomy.topics.values() if t.parent is None]
     rolled = service.taxonomy.rollup(classifier.predict(make_image("JPEG", (320, 240))))
     assert sum(rolled[t.id] for t in roots) == pytest.approx(1.0, abs=1e-4)
+
+
+def test_sessions_never_busy_spin() -> None:
+    from aurora_images.classifier import session_options
+
+    options = session_options(threads=3)
+
+    assert options.get_session_config_entry("session.intra_op.allow_spinning") == "0"
+    assert options.get_session_config_entry("session.inter_op.allow_spinning") == "0"
+    assert options.intra_op_num_threads == 3

@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: models
-          key: model-${{ hashFiles('scripts/fetch_model.py') }}
+          key: models-${{ hashFiles('scripts/fetch_model.py') }}
       - run: uv run python scripts/fetch_model.py
       - run: uv run ruff format --check .
       - run: uv run ruff check .
@@ -37,7 +37,7 @@ jobs:
     needs: check
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t aurora-images:ci .
+      - run: docker build --build-arg BACKEND=mobilenet -t aurora-images:ci .
       - name: Smoke test container
         run: |
           docker run -d --rm --name api -p 8000:8000 aurora-images:ci

@@ -167,3 +167,92 @@ def test_broken_taxonomy_stops_startup(tmp_path: Path) -> None:
 
     with pytest.raises(TaxonomyError, match="unknown parent"), TestClient(app):
         pass
+
+
+def write_yaml(path: Path, document: dict[str, Any]) -> Path:
+    path.write_text(yaml.safe_dump(document))
+    return path
+
+
+def test_user_file_can_extend_the_packaged_open_taxonomy(tmp_path: Path) -> None:
+    mine = write_yaml(
+        tmp_path / "mine.yaml",
+        {
+            "extends": "package:taxonomy_open.yaml",
+            "prompts": {"n02123045": "tabby cat"},
+            "topics": [{"id": "aurora photo", "parent": "sky"}],
+            "labels": [{"id": "my:corona", "name": "aurora corona", "topic": "aurora photo"}],
+        },
+    )
+
+    taxonomy = Taxonomy.load(mine)
+    by_name = {label.name: label for label in taxonomy.labels}
+
+    assert len(taxonomy.labels) == 1069
+    assert by_name["aurora corona"].index == 1068
+    assert taxonomy.label_path(by_name["aurora corona"]) == [
+        "landscape",
+        "sky",
+        "aurora photo",
+        "aurora corona",
+    ]
+    assert by_name["tabby"].text == "tabby cat"
+    assert by_name["mouse"].text == "computer mouse", "prompts of the base file are kept"
+
+
+def test_extends_resolves_paths_relative_to_the_file(tmp_path: Path) -> None:
+    (tmp_path / "conf").mkdir()
+    write_yaml(tmp_path / "base.yaml", SMALL_TAXONOMY)
+    child = write_yaml(
+        tmp_path / "conf" / "child.yaml",
+        {"extends": "../base.yaml", "labels": [{"id": "n6", "name": "hut", "topic": "landscape"}]},
+    )
+
+    assert [label.name for label in Taxonomy.load(child).labels][-1] == "hut"
+
+
+@pytest.mark.parametrize(
+    ("extension", "message"),
+    [
+        ({"extends": 5}, "must be a file name"),
+        ({"extends": "missing.yaml"}, "cannot read"),
+        ({"extends": "base.yaml", "prompts": ["x"]}, "must map label ids"),
+        ({"extends": "base.yaml", "prompts": {"nope": "x"}}, "unknown label ids"),
+        (
+            {
+                "extends": "base.yaml",
+                "labels": [{"id": "x", "name": "x", "topic": "dog", "index": 9}],
+            },
+            "index automatically",
+        ),
+        ({"extends": "base.yaml", "labels": [{"name": "no id"}]}, "malformed"),
+        (
+            {"extends": "base.yaml", "labels": [{"id": "n1", "name": "dup", "topic": "dog"}]},
+            "duplicate label id",
+        ),
+        (
+            {"extends": "base.yaml", "labels": [{"id": "x", "name": "x", "topic": "unknown"}]},
+            "unknown topic",
+        ),
+    ],
+)
+def test_broken_extensions_are_rejected(
+    tmp_path: Path, extension: dict[str, Any], message: str
+) -> None:
+    write_yaml(tmp_path / "base.yaml", SMALL_TAXONOMY)
+
+    with pytest.raises(TaxonomyError, match=message):
+        Taxonomy.load(write_yaml(tmp_path / "ext.yaml", extension))
+
+
+def test_extends_cycles_and_deep_chains_are_rejected(tmp_path: Path) -> None:
+    write_yaml(tmp_path / "a.yaml", {"extends": "b.yaml"})
+    write_yaml(tmp_path / "b.yaml", {"extends": "a.yaml"})
+    with pytest.raises(TaxonomyError, match="cycle"):
+        Taxonomy.load(tmp_path / "a.yaml")
+
+    write_yaml(tmp_path / "t0.yaml", SMALL_TAXONOMY)
+    for i in range(1, 6):
+        write_yaml(tmp_path / f"t{i}.yaml", {"extends": f"t{i - 1}.yaml"})
+    with pytest.raises(TaxonomyError, match="deeper than"):
+        Taxonomy.load(tmp_path / "t5.yaml")

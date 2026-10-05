@@ -13,6 +13,7 @@ from aurora_images.api.routes import router
 from aurora_images.classifier import Classifier, ModelNotAvailableError, OnnxClassifier
 from aurora_images.config import Settings, get_settings
 from aurora_images.service import ClassificationService
+from aurora_images.siglip import SiglipClassifier
 from aurora_images.storage import ImageStorage, LocalImageStorage
 from aurora_images.taxonomy import Taxonomy
 
@@ -22,9 +23,16 @@ logger = logging.getLogger("aurora_images")
 _REQUEST_ID = re.compile(r"[A-Za-z0-9_.-]{1,64}")
 
 
-def _load_classifier(settings: Settings) -> Classifier | None:
+PACKAGED_TAXONOMY = {"siglip": "taxonomy_open.yaml", "mobilenet": "taxonomy.yaml"}
+
+
+def _load_classifier(settings: Settings, taxonomy: Taxonomy) -> Classifier | None:
     try:
-        return OnnxClassifier(settings.model_path)
+        if settings.backend == "siglip":
+            return SiglipClassifier.from_dir(
+                settings.siglip_dir, taxonomy, settings.label_cache_dir, settings.ort_threads
+            )
+        return OnnxClassifier(settings.model_path, settings.ort_threads)
     except ModelNotAvailableError as exc:
         logger.warning("classification disabled: %s", exc)
         return None
@@ -35,7 +43,8 @@ def _build_service(
 ) -> ClassificationService | None:
     # A missing model is an ops state (503 + /health); a broken taxonomy is a config bug and
     # must stop startup, so TaxonomyError is not caught here.
-    taxonomy = Taxonomy.load(settings.taxonomy_path)
+    taxonomy = Taxonomy.load(settings.taxonomy_path, packaged=PACKAGED_TAXONOMY[settings.backend])
+    classifier = classifier or _load_classifier(settings, taxonomy)
     if classifier is None:
         return None
     return ClassificationService(
@@ -58,7 +67,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.storage = storage or LocalImageStorage(settings.upload_dir)
-        app.state.service = _build_service(settings, classifier or _load_classifier(settings))
+        app.state.service = _build_service(settings, classifier)
         yield
 
     app = FastAPI(title="Aurora Images API", version=__version__, lifespan=lifespan)

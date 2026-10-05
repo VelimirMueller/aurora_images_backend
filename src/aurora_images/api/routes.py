@@ -61,7 +61,12 @@ async def validated_image(
 
 @router.get("/health", tags=["ops"])
 def health(request: Request) -> HealthOut:
-    return HealthOut(status="ok", model_loaded=request.app.state.service is not None)
+    service: ClassificationService | None = request.app.state.service
+    return HealthOut(
+        status="ok",
+        model_loaded=service is not None,
+        model=service.model_name if service else None,
+    )
 
 
 @router.post(

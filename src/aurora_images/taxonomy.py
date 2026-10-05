@@ -28,6 +28,11 @@ class Label:
     name: str
     topic: str
     index: int  # position in the classifier's output vector
+    prompt: str | None = None  # text an open-vocabulary model embeds; defaults to name
+
+    @property
+    def text(self) -> str:
+        return self.prompt or self.name
 
 
 class Taxonomy:
@@ -44,22 +49,15 @@ class Taxonomy:
                 self._membership[row[topic_id], label.index] = 1.0
 
     @classmethod
-    def load(cls, path: Path | None = None) -> "Taxonomy":
-        """Load a taxonomy YAML file, or the packaged default when path is None.
+    def load(cls, path: Path | None = None, *, packaged: str = "taxonomy.yaml") -> "Taxonomy":
+        """Load a taxonomy YAML file, or the packaged file named `packaged` when path is None.
 
-        Every failure (unreadable file, bad YAML, missing fields) surfaces as TaxonomyError.
+        A file may `extends:` another one (`package:<name>` or a path relative to itself) and
+        add `prompts`, `topics` and `labels` on top. Every failure (unreadable file, bad YAML,
+        missing fields, broken extends chain) surfaces as TaxonomyError.
         """
-        source = str(path) if path else "packaged taxonomy.yaml"
-        try:
-            if path is None:
-                text = resources.files("aurora_images.data").joinpath("taxonomy.yaml").read_text()
-            else:
-                text = path.read_text(encoding="utf-8")
-            document = yaml.safe_load(text)
-        except (OSError, yaml.YAMLError) as exc:
-            raise TaxonomyError(f"cannot read {source}: {exc}") from exc
-        if not isinstance(document, dict) or not {"topics", "labels"} <= document.keys():
-            raise TaxonomyError(f"{source} must be a mapping with 'topics' and 'labels'")
+        source = _Source(path, packaged)
+        document = _resolve(source, seen=set())
         try:
             return cls(document["topics"], document["labels"], int(document.get("version", 1)))
         except (KeyError, TypeError, ValueError) as exc:
@@ -104,7 +102,10 @@ def _build_topics(raw: list[dict[str, Any]]) -> dict[str, Topic]:
 
 
 def _build_labels(raw: list[dict[str, Any]], topics: dict[str, Topic]) -> list[Label]:
-    labels = [Label(item["id"], item["name"], item["topic"], item["index"]) for item in raw]
+    labels = [
+        Label(item["id"], item["name"], item["topic"], item["index"], item.get("prompt"))
+        for item in raw
+    ]
     # bool is an int subclass and 1.0 == 1, so both would slip through the range check below.
     if any(type(label.index) is not int for label in labels):
         raise TaxonomyError("label indices must be integers")
@@ -118,3 +119,82 @@ def _build_labels(raw: list[dict[str, Any]], topics: dict[str, Topic]) -> list[L
         if label.topic not in topics:
             raise TaxonomyError(f"label {label.id} references unknown topic {label.topic!r}")
     return sorted(labels, key=lambda label: label.index)
+
+
+_PACKAGE_PREFIX = "package:"
+_MAX_EXTENDS_DEPTH = 4
+
+
+@dataclass(frozen=True)
+class _Source:
+    path: Path | None  # None = a packaged file
+    packaged: str
+
+    def __str__(self) -> str:
+        return str(self.path) if self.path else f"packaged {self.packaged}"
+
+    def read(self) -> dict[str, Any]:
+        try:
+            if self.path is None:
+                text = resources.files("aurora_images.data").joinpath(self.packaged).read_text()
+            else:
+                text = self.path.read_text(encoding="utf-8")
+            document = yaml.safe_load(text)
+        except (OSError, yaml.YAMLError) as exc:
+            raise TaxonomyError(f"cannot read {self}: {exc}") from exc
+        if not isinstance(document, dict):
+            raise TaxonomyError(f"{self} must be a mapping with 'topics' and 'labels'")
+        return document
+
+    def base(self, reference: object) -> "_Source":
+        if not isinstance(reference, str) or not reference:
+            raise TaxonomyError(f"{self}: 'extends' must be a file name")
+        if reference.startswith(_PACKAGE_PREFIX):
+            return _Source(None, reference.removeprefix(_PACKAGE_PREFIX))
+        if self.path is None:
+            return _Source(None, reference)  # packaged files extend packaged siblings
+        return _Source((self.path.parent / reference).resolve(), "")
+
+
+def _resolve(source: _Source, seen: set[str]) -> dict[str, Any]:
+    """Read a document and, if it extends another, merge it on top of its resolved base."""
+    if str(source) in seen:
+        raise TaxonomyError(f"'extends' cycle through {source}")
+    if len(seen) >= _MAX_EXTENDS_DEPTH:
+        raise TaxonomyError(f"'extends' chain deeper than {_MAX_EXTENDS_DEPTH} files at {source}")
+    seen.add(str(source))
+    document = source.read()
+    if "extends" not in document:
+        if not {"topics", "labels"} <= document.keys():
+            raise TaxonomyError(f"{source} must be a mapping with 'topics' and 'labels'")
+        return document
+    base = _resolve(source.base(document["extends"]), seen)
+    try:
+        return _merge(base, document)
+    except (KeyError, TypeError) as exc:
+        raise TaxonomyError(f"{source} has a malformed entry: {exc!r}") from exc
+
+
+def _merge(base: dict[str, Any], extension: dict[str, Any]) -> dict[str, Any]:
+    prompts = extension.get("prompts") or {}
+    if not isinstance(prompts, dict):
+        raise TaxonomyError("'prompts' must map label ids to text")
+    base_labels: list[dict[str, Any]] = base["labels"]
+    unknown = sorted(set(prompts) - {label["id"] for label in base_labels})
+    if unknown:
+        raise TaxonomyError(f"prompts for unknown label ids: {unknown}")
+    labels = [
+        {**label, "prompt": prompts[label["id"]]} if label["id"] in prompts else label
+        for label in base_labels
+    ]
+    for offset, label in enumerate(extension.get("labels") or []):
+        if "index" in label:
+            raise TaxonomyError(
+                f"label {label.get('id')!r}: extending labels get their index automatically"
+            )
+        labels.append({**label, "index": len(base_labels) + offset})
+    return {
+        "version": extension.get("version", base.get("version", 1)),
+        "topics": [*base["topics"], *(extension.get("topics") or [])],
+        "labels": labels,
+    }
