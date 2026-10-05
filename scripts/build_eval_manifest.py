@@ -23,7 +23,7 @@ from pathlib import Path
 
 import yaml
 
-from aurora_images.evaluation import dhash
+from aurora_images.images import dhash
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "eval" / "manifest.yaml"

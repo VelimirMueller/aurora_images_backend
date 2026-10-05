@@ -21,9 +21,9 @@ ARG BACKEND
 RUN useradd --system --uid 10001 --home /app app
 WORKDIR /app
 COPY --from=build --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 AURORA_UPLOAD_DIR=/data/uploads \
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 AURORA_UPLOAD_DIR=/data/uploads AURORA_DATA_DIR=/data/state \
     AURORA_BACKEND=$BACKEND
-RUN mkdir -p /data/uploads && chown app:app /data/uploads
+RUN mkdir -p /data/uploads /data/state && chown app:app /data/uploads /data/state
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"

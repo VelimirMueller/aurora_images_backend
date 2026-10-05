@@ -11,12 +11,12 @@ from aurora_images.evaluation import (
     Item,
     Outcome,
     Report,
-    dhash,
     evaluate,
     fetch,
     load_manifest,
     same_picture,
 )
+from aurora_images.images import dhash
 from aurora_images.service import ClassificationService
 from aurora_images.taxonomy import Taxonomy
 from tests.conftest import SMALL_TAXONOMY, FakeClassifier, make_image

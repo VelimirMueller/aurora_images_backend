@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 import time
@@ -9,9 +10,12 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from aurora_images import __version__
+from aurora_images.api import admin
 from aurora_images.api.routes import router
 from aurora_images.classifier import Classifier, ModelNotAvailableError, OnnxClassifier
 from aurora_images.config import Settings, get_settings
+from aurora_images.feedback import FeedbackStore
+from aurora_images.runtime_labels import RuntimeLabels, signature
 from aurora_images.service import ClassificationService
 from aurora_images.siglip import SiglipClassifier
 from aurora_images.storage import ImageStorage, LocalImageStorage
@@ -38,13 +42,32 @@ def _load_classifier(settings: Settings, taxonomy: Taxonomy) -> Classifier | Non
         return None
 
 
+def runtime_labels(settings: Settings) -> RuntimeLabels:
+    """Overlay of labels added at runtime, on top of the configured base taxonomy."""
+    base_ref = (
+        str(settings.taxonomy_path.resolve())
+        if settings.taxonomy_path
+        else f"package:{PACKAGED_TAXONOMY[settings.backend]}"
+    )
+    return RuntimeLabels(settings.data_dir / "labels.yaml", base_ref)
+
+
+def feedback_store(settings: Settings) -> FeedbackStore | None:
+    """Only touch the disk when corrections can be written (admin on) or already exist."""
+    path = settings.data_dir / "feedback.sqlite3"
+    return FeedbackStore(path) if settings.admin_token or path.is_file() else None
+
+
 def build_service(
     settings: Settings, classifier: Classifier | None = None
 ) -> ClassificationService | None:
     """Classification service for the configured backend, or None when its model is missing."""
     # A missing model is an ops state (503 + /health); a broken taxonomy is a config bug and
     # must stop startup, so TaxonomyError is not caught here.
-    taxonomy = Taxonomy.load(settings.taxonomy_path, packaged=PACKAGED_TAXONOMY[settings.backend])
+    packaged = PACKAGED_TAXONOMY[settings.backend]
+    taxonomy = runtime_labels(settings).load(
+        lambda: Taxonomy.load(settings.taxonomy_path, packaged=packaged)
+    )
     classifier = classifier or _load_classifier(settings, taxonomy)
     if classifier is None:
         return None
@@ -69,6 +92,13 @@ def create_app(
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.storage = storage or LocalImageStorage(settings.upload_dir)
         app.state.service = build_service(settings, classifier)
+        app.state.runtime_labels = runtime_labels(settings)
+        app.state.overlay_signature = signature(app.state.runtime_labels.overlay)
+        app.state.load_base_taxonomy = lambda: Taxonomy.load(
+            settings.taxonomy_path, packaged=PACKAGED_TAXONOMY[settings.backend]
+        )
+        app.state.feedback = feedback_store(settings)
+        app.state.admin_lock = asyncio.Lock()
         yield
 
     app = FastAPI(title="Aurora Images API", version=__version__, lifespan=lifespan)
@@ -76,8 +106,8 @@ def create_app(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-Request-ID"],
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["Content-Type", "X-Request-ID", "Authorization"],
         expose_headers=["X-Request-ID"],
     )
 
@@ -102,4 +132,5 @@ def create_app(
         return response
 
     app.include_router(router)
+    app.include_router(admin.router)
     return app

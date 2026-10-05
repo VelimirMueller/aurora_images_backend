@@ -58,6 +58,7 @@ docker run -p 8000:8000 -v aurora-uploads:/data/uploads aurora-images
 | GET    | `/health`             | Liveness, and whether the model is loaded   | 200     |               |
 | POST   | `/v1/images`          | Store an image, return its generated id     | 201     | 413, 415, 422 |
 | POST   | `/v1/classifications` | Classify an image (not stored)              | 200     | 413, 415, 422, 503 |
+| *admin* | `/v1/labels`, `/v1/feedback` | See [Runtime labels and corrections](#runtime-labels-and-corrections) | | 401, 404, 409 |
 
 Both POST endpoints take `multipart/form-data` with one field, `image` (JPEG, PNG or WebP).
 
@@ -185,6 +186,40 @@ Both towers are **fp32 on purpose**:
   from 93.1 % to 83.0 %.
 - fp32 gives identical embeddings on every architecture.
 
+## Runtime labels and corrections
+
+Two admin endpoints change what the server knows while it runs. They need
+`Authorization: Bearer $AURORA_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
+
+| Method | Path | Does |
+|---|---|---|
+| `POST` | `/v1/labels` | Add a text label: `{"name", "topic", "prompt"?, "new_topic"?, "topic_parent"?}` |
+| `GET` | `/v1/labels` | List runtime labels |
+| `DELETE` | `/v1/labels/{id}` | Remove a runtime label (packaged labels cannot be removed: 409) |
+| `POST` | `/v1/feedback` | `image` + `label_id`: the correct label for this picture |
+
+```bash
+curl -H "Authorization: Bearer $AURORA_ADMIN_TOKEN" -H 'content-type: application/json' \
+  -d '{"name": "rice paddy", "topic": "landscape", "prompt": "a green rice paddy field"}' \
+  http://localhost:8000/v1/labels
+```
+
+- **No retraining.** A new label is one more text to embed; known texts keep their cached
+  embedding. Adding a label takes about 30 s on CPU, mostly loading the fp32 text tower, which
+  is dropped afterwards. The running service keeps answering meanwhile. The new service is
+  built completely and then swapped in with one assignment, so no request sees a half-updated
+  model.
+- **Persistence.** Runtime labels live in `$AURORA_DATA_DIR/labels.yaml`, an ordinary taxonomy
+  file that `extends` the configured base. It survives restarts and can be reviewed and edited.
+  A change is staged and validated first; a failed change leaves file and service as they were.
+- **Corrections** are stored in `$AURORA_DATA_DIR/feedback.sqlite3`, keyed by the picture's
+  difference hash. When the same picture comes back (re-encoded or resized), the response
+  carries `correction` next to the unchanged model output. Clients should prefer it.
+  Different photos are never affected. Semantic embeddings cannot do this safely: on the eval
+  set a resized copy of one photo can be *less* similar (0.87) than two different photos (0.90).
+  Generalising from corrections (few-shot prototypes) is future work.
+- Runtime labels need an open-vocabulary backend; `mobilenet` answers 409.
+
 ## Evaluation
 
 [`eval/manifest.yaml`](eval/manifest.yaml) is a frozen set of **58 freely licensed Wikimedia
@@ -237,6 +272,8 @@ All settings are environment variables with the `AURORA_` prefix. See [`.env.exa
 |---------------------------|------------------------------------------------|
 | `AURORA_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
 | `AURORA_UPLOAD_DIR`       | `uploads`                                      |
+| `AURORA_DATA_DIR`         | `data` (runtime labels + corrections)          |
+| `AURORA_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
 | `AURORA_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
 | `AURORA_MAX_IMAGE_PIXELS` | `40000000`                                     |
 | `AURORA_BACKEND`          | `siglip` (or `mobilenet`)                      |
@@ -302,12 +339,14 @@ here with its source and license before it is used.
 - Uploaded files are named `<uuid4>.<ext>`. The extension comes from the decoded format,
   and files open with `O_EXCL`, so an upload can never overwrite an existing file.
 - CORS allows only the configured origins, without credentials.
-- There is no authentication. Put the service behind a gateway, or add auth, before you
-  expose it publicly.
+- Endpoints that change server state (`/v1/labels`, `/v1/feedback`) need a bearer token
+  (`AURORA_ADMIN_TOKEN`, compared in constant time) and are absent without one.
+- Classification and uploads are unauthenticated. Put the service behind a gateway with auth
+  and rate limits before you expose it publicly.
 
 ## Roadmap
 
-- Labels learned from example images at runtime, plus a feedback endpoint.
+- Few-shot labels from example images (needs calibrating image-image vs image-text scores).
 - An S3-compatible `ImageStorage`, plus a `GET /v1/images/{id}`.
 - API keys and rate limiting.
 

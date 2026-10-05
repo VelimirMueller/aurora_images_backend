@@ -37,6 +37,12 @@ class TopicOut(BaseModel):
     score: float = Field(ge=0, le=1, description="Sum of the probabilities of all labels below")
 
 
+class CorrectionOut(BaseModel):
+    feedback_id: int
+    label: LabelOut = Field(description="The label a user gave this picture; score = model's")
+    distance: int = Field(description="dHash bits between this picture and the corrected one")
+
+
 class ClassificationOut(BaseModel):
     request_id: str
     image: ImageInfo
@@ -46,6 +52,11 @@ class ClassificationOut(BaseModel):
     labels: list[LabelOut] = Field(description="Top-k labels, best first")
     topics: list[TopicOut] = Field(description="Topics above the minimum score, best first")
     uncertain: bool = Field(description="True when the root topic score is below the threshold")
+    correction: CorrectionOut | None = Field(
+        default=None,
+        description="A user corrected this exact picture before (resized/re-encoded copies "
+        "match). Prefer it over `primary`; the model's own scores are left untouched.",
+    )
     timings_ms: dict[str, float]
 
 
@@ -57,3 +68,34 @@ class HealthOut(BaseModel):
 
 class ErrorOut(BaseModel):
     detail: str
+
+
+class LabelIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80, description="Label shown in responses")
+    topic: str = Field(min_length=1, max_length=80)
+    prompt: str | None = Field(
+        default=None, max_length=200, description="Text to embed instead of the name"
+    )
+    new_topic: bool = Field(default=False, description="Create `topic` under `topic_parent`")
+    topic_parent: str | None = Field(
+        default=None, description="Parent of the new topic; null = root"
+    )
+
+
+class RuntimeLabelOut(BaseModel):
+    id: str
+    name: str
+    topic: str
+    prompt: str | None = None
+    path: list[str]
+
+
+class RuntimeLabelsOut(BaseModel):
+    labels: list[RuntimeLabelOut]
+    total_labels: int = Field(description="All labels the model scores, packaged + runtime")
+
+
+class FeedbackOut(BaseModel):
+    id: int
+    label_id: str
+    dhash: str

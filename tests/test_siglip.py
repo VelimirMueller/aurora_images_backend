@@ -39,7 +39,7 @@ class FakeSession:
 
 def tiny_tokenizer() -> Tokenizer:
     vocab = {"<pad>": 0, "<eos>": 1, "<unk>": 2, "a": 3, "photo": 4, "of": 5, "dog": 6}
-    tokenizer = Tokenizer(models.WordLevel(vocab, unk_token="<unk>"))  # noqa: S106
+    tokenizer = Tokenizer(models.WordLevel(vocab, unk_token="<unk>"))
     tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
     tokenizer.post_processor = processors.TemplateProcessing(
         single="$A <eos>", special_tokens=[("<eos>", 1)]
@@ -193,3 +193,57 @@ def test_siglip_end_to_end_with_label_cache(
     assert classifier.num_classes == len(taxonomy.labels)
     assert probabilities.sum() == pytest.approx(1.0, abs=1e-4)
     assert len(result.labels) == 5
+
+
+def test_for_taxonomy_embeds_only_new_texts_and_leaves_the_original(tmp_path: Path) -> None:
+    import copy
+
+    from tests.conftest import SMALL_TAXONOMY
+
+    def taxonomy_with(extra: list[dict[str, object]]) -> Taxonomy:
+        document = copy.deepcopy(SMALL_TAXONOMY)
+        document["labels"] += extra
+        return Taxonomy(document["topics"], document["labels"], 1)
+
+    base = taxonomy_with([])
+    texts = [PROMPT_TEMPLATE.format(label.text) for label in base.labels]
+    embedded: list[list[str]] = []
+
+    def embed(new: list[str]) -> npt.NDArray[np.float32]:
+        embedded.append(new)
+        return np.eye(len(new), 4, dtype=np.float32)
+
+    cache = LabelEmbeddingCache(tmp_path)
+    original = SiglipClassifier(
+        FakeSession(np.ones(4, dtype=np.float32)),
+        np.eye(5, 4, dtype=np.float32),
+        10.0,
+        texts=texts,
+        embed_texts=embed,
+        cache=cache,
+    )
+
+    grown = original.for_taxonomy(
+        taxonomy_with([{"id": "r1", "name": "hut", "topic": "landscape", "index": 5}])
+    )
+
+    assert embedded == [[PROMPT_TEMPLATE.format("hut")]], "known texts are reused"
+    assert (original.num_classes, grown.num_classes) == (5, 6)
+    assert cache.load([*texts, PROMPT_TEMPLATE.format("hut")], width=4) is not None
+    assert original.for_taxonomy(base).num_classes == 5
+    assert len(embedded) == 1, "a label set of known texts needs no text tower"
+
+
+def test_for_taxonomy_without_text_tower_cannot_add_labels() -> None:
+    import copy
+
+    from tests.conftest import SMALL_TAXONOMY
+
+    document = copy.deepcopy(SMALL_TAXONOMY)
+    document["labels"].append({"id": "r1", "name": "hut", "topic": "landscape", "index": 5})
+    classifier = SiglipClassifier(
+        FakeSession(np.ones(4, dtype=np.float32)), np.eye(5, 4, dtype=np.float32), 10.0
+    )
+
+    with pytest.raises(ModelNotAvailableError, match="text tower"):
+        classifier.for_taxonomy(Taxonomy(document["topics"], document["labels"], 1))

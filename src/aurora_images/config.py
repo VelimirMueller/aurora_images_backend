@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +16,13 @@ class Settings(BaseSettings):
         description="Browser origins allowed to call the API. Never use '*' in production.",
     )
     upload_dir: Path = Path("uploads")
+    data_dir: Path = Field(
+        default=Path("data"), description="Runtime labels (labels.yaml) and feedback.sqlite3"
+    )
+    admin_token: SecretStr | None = Field(
+        default=None,
+        description="Bearer token for /v1/labels and /v1/feedback; unset disables them.",
+    )
     max_upload_bytes: int = Field(default=5 * 1024 * 1024, gt=0)
     max_image_pixels: int = Field(default=40_000_000, gt=0)
     backend: Literal["siglip", "mobilenet"] = Field(
