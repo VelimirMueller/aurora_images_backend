@@ -5,9 +5,9 @@ import numpy.typing as npt
 import pytest
 from tokenizers import Tokenizer, models, pre_tokenizers, processors
 
-from aurora_images.classifier import ModelNotAvailableError
-from aurora_images.service import ClassificationService
-from aurora_images.siglip import (
+from aurorae_images.classifier import ModelNotAvailableError
+from aurorae_images.service import ClassificationService
+from aurorae_images.siglip import (
     PROMPT_TEMPLATE,
     LabelEmbeddingCache,
     SiglipClassifier,
@@ -15,7 +15,7 @@ from aurora_images.siglip import (
     _fingerprint,
     preprocess,
 )
-from aurora_images.taxonomy import Taxonomy, TaxonomyError
+from aurorae_images.taxonomy import Taxonomy, TaxonomyError
 from tests.conftest import make_image
 
 SIGLIP_DIR = Path(__file__).resolve().parent.parent / "models" / "siglip2-base-patch16-224"

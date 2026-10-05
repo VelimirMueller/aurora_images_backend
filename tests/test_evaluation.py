@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from aurora_images.evaluation import (
+from aurorae_images.evaluation import (
     Item,
     Outcome,
     Report,
@@ -16,9 +16,9 @@ from aurora_images.evaluation import (
     load_manifest,
     same_picture,
 )
-from aurora_images.images import dhash
-from aurora_images.service import ClassificationService
-from aurora_images.taxonomy import Taxonomy
+from aurorae_images.images import dhash
+from aurorae_images.service import ClassificationService
+from aurorae_images.taxonomy import Taxonomy
 from tests.conftest import SMALL_TAXONOMY, FakeClassifier, make_image
 
 
@@ -113,7 +113,7 @@ def test_changed_upstream_file_is_unavailable_and_not_cached(
     cached = tmp_path / f"{item.sha256[:16]}.jpg"
     cached.write_bytes(b"truncated earlier download")
     monkeypatch.setattr(
-        "aurora_images.evaluation.urllib.request.urlopen",
+        "aurorae_images.evaluation.urllib.request.urlopen",
         lambda *a, **k: FakeResponse(b"re-rendered thumbnail"),
     )
 
@@ -136,7 +136,7 @@ def test_deleted_upstream_file_is_unavailable_not_a_crash(
     def gone(*args: object, **kwargs: object) -> None:
         raise urllib.error.HTTPError(item.url, 404, "Not Found", {}, None)  # type: ignore[arg-type]
 
-    monkeypatch.setattr("aurora_images.evaluation.urllib.request.urlopen", gone)
+    monkeypatch.setattr("aurorae_images.evaluation.urllib.request.urlopen", gone)
 
     report = evaluate(small_service(), [item], tmp_path)
 
@@ -150,7 +150,7 @@ def test_bad_cache_entry_is_replaced_by_a_verified_download(
     item = cached_item(tmp_path, ("animal",), good)
     (tmp_path / f"{item.sha256[:16]}.jpg").write_bytes(b"partial")
     monkeypatch.setattr(
-        "aurora_images.evaluation.urllib.request.urlopen", lambda *a, **k: FakeResponse(good)
+        "aurorae_images.evaluation.urllib.request.urlopen", lambda *a, **k: FakeResponse(good)
     )
 
     assert fetch(item, tmp_path) == good
@@ -164,7 +164,8 @@ def test_frozen_manifest_is_complete_and_licensed() -> None:
         t["id"]
         for t in yaml.safe_load(
             (
-                Path(__file__).resolve().parent.parent / "src/aurora_images/data/taxonomy_open.yaml"
+                Path(__file__).resolve().parent.parent
+                / "src/aurorae_images/data/taxonomy_open.yaml"
             ).read_text()
         )["topics"]
         if t["parent"] is None
@@ -206,8 +207,8 @@ def test_rate_limits_are_retried_with_retry_after(
             raise response
         return response
 
-    monkeypatch.setattr("aurora_images.evaluation.urllib.request.urlopen", urlopen)
-    monkeypatch.setattr("aurora_images.evaluation.time.sleep", sleeps.append)
+    monkeypatch.setattr("aurorae_images.evaluation.urllib.request.urlopen", urlopen)
+    monkeypatch.setattr("aurorae_images.evaluation.time.sleep", sleeps.append)
 
     assert fetch(item, tmp_path) == good
     assert 7.0 in sleeps, "Retry-After is honoured"
@@ -222,8 +223,8 @@ def test_persistent_rate_limit_becomes_unavailable_with_reason(
     def limited(*args: object, **kwargs: object) -> None:
         raise urllib.error.HTTPError(item.url, 429, "Too Many Requests", {}, None)  # type: ignore[arg-type]
 
-    monkeypatch.setattr("aurora_images.evaluation.urllib.request.urlopen", limited)
-    monkeypatch.setattr("aurora_images.evaluation.time.sleep", lambda seconds: None)
+    monkeypatch.setattr("aurorae_images.evaluation.urllib.request.urlopen", limited)
+    monkeypatch.setattr("aurorae_images.evaluation.time.sleep", lambda seconds: None)
 
     report = evaluate(small_service(), [item], tmp_path)
 
@@ -271,9 +272,10 @@ def test_reencoded_same_picture_is_scored_and_reported(
     other_bytes = reencode(original, quality=60, width=200)
     assert other_bytes != original
     monkeypatch.setattr(
-        "aurora_images.evaluation.urllib.request.urlopen", lambda *a, **k: FakeResponse(other_bytes)
+        "aurorae_images.evaluation.urllib.request.urlopen",
+        lambda *a, **k: FakeResponse(other_bytes),
     )
-    monkeypatch.setattr("aurora_images.evaluation.time.sleep", lambda seconds: None)
+    monkeypatch.setattr("aurorae_images.evaluation.time.sleep", lambda seconds: None)
 
     report = evaluate(small_service(), [item], tmp_path)
 

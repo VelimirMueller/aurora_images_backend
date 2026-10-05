@@ -14,10 +14,10 @@ import numpy as np
 import yaml
 from PIL import UnidentifiedImageError
 
-from aurora_images.images import dhash, dhash_distance
-from aurora_images.service import Classification, ClassificationService
+from aurorae_images.images import dhash, dhash_distance
+from aurorae_images.service import Classification, ClassificationService
 
-USER_AGENT = "aurora-images-eval/0.1 (https://github.com/VelimirMueller/aurora_images_backend)"
+USER_AGENT = "aurorae-images-eval/0.1 (https://github.com/VelimirMueller/aurorae_images_backend)"
 # Wikimedia renders thumbnails per data centre, so the same picture can arrive with other bytes.
 # A 64-bit difference hash tells "same picture, re-encoded" from "different picture":
 # re-encodes/resizes of the 58 eval images differ by at most 6 bits, distinct images by >= 15.

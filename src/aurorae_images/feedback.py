@@ -14,8 +14,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aurora_images.images import dhash_distance
-from aurora_images.runtime_labels import signature
+from aurorae_images.images import dhash_distance
+from aurorae_images.runtime_labels import signature
 
 MAX_DISTANCE = 8
 

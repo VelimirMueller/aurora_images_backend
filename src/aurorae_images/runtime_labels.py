@@ -17,7 +17,7 @@ from typing import Any, TypeVar
 
 import yaml
 
-from aurora_images.taxonomy import Taxonomy, TaxonomyError
+from aurorae_images.taxonomy import Taxonomy, TaxonomyError
 
 ID_PREFIX = "runtime:"
 T = TypeVar("T")

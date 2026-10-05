@@ -20,10 +20,10 @@ import numpy.typing as npt
 from PIL import Image, ImageOps
 from tokenizers import Tokenizer
 
-from aurora_images.classifier import ModelNotAvailableError, load_session, softmax
-from aurora_images.taxonomy import Taxonomy, TaxonomyError
+from aurorae_images.classifier import ModelNotAvailableError, load_session, softmax
+from aurorae_images.taxonomy import Taxonomy, TaxonomyError
 
-logger = logging.getLogger("aurora_images")
+logger = logging.getLogger("aurorae_images")
 
 MODEL_NAME = "siglip2-base-patch16-224"
 # onnx-community/siglip2-base-patch16-224-ONNX revision, pinned in scripts/fetch_model.py.

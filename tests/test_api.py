@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from aurora_images.config import Settings
+from aurorae_images.config import Settings
 from tests.conftest import make_image
 
 
@@ -164,7 +164,7 @@ def test_caller_request_id_is_kept_only_when_safe(
 
 
 def test_mobilenet_backend_without_weights_degrades_to_503(settings: Settings) -> None:
-    from aurora_images.main import create_app
+    from aurorae_images.main import create_app
 
     mobilenet = settings.model_copy(update={"backend": "mobilenet", "taxonomy_path": None})
     with TestClient(create_app(mobilenet)) as client:

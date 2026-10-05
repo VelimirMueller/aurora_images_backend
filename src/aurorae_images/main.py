@@ -9,19 +9,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from aurora_images import __version__
-from aurora_images.api import admin
-from aurora_images.api.routes import router
-from aurora_images.classifier import Classifier, ModelNotAvailableError, OnnxClassifier
-from aurora_images.config import Settings, get_settings
-from aurora_images.feedback import FeedbackStore
-from aurora_images.runtime_labels import RuntimeLabels, signature
-from aurora_images.service import ClassificationService
-from aurora_images.siglip import SiglipClassifier
-from aurora_images.storage import ImageStorage, LocalImageStorage
-from aurora_images.taxonomy import Taxonomy
+from aurorae_images import __version__
+from aurorae_images.api import admin
+from aurorae_images.api.routes import router
+from aurorae_images.classifier import Classifier, ModelNotAvailableError, OnnxClassifier
+from aurorae_images.config import Settings, get_settings
+from aurorae_images.feedback import FeedbackStore
+from aurorae_images.runtime_labels import RuntimeLabels, signature
+from aurorae_images.service import ClassificationService
+from aurorae_images.siglip import SiglipClassifier
+from aurorae_images.storage import ImageStorage, LocalImageStorage
+from aurorae_images.taxonomy import Taxonomy
 
-logger = logging.getLogger("aurora_images")
+logger = logging.getLogger("aurorae_images")
 
 # Accept a caller's X-Request-ID only when it is short and log-safe; otherwise mint one.
 _REQUEST_ID = re.compile(r"[A-Za-z0-9_.-]{1,64}")
@@ -101,7 +101,7 @@ def create_app(
         app.state.admin_lock = asyncio.Lock()
         yield
 
-    app = FastAPI(title="Aurora Images API", version=__version__, lifespan=lifespan)
+    app = FastAPI(title="Aurorae Images API", version=__version__, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
