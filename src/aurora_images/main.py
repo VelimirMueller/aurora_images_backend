@@ -38,9 +38,10 @@ def _load_classifier(settings: Settings, taxonomy: Taxonomy) -> Classifier | Non
         return None
 
 
-def _build_service(
-    settings: Settings, classifier: Classifier | None
+def build_service(
+    settings: Settings, classifier: Classifier | None = None
 ) -> ClassificationService | None:
+    """Classification service for the configured backend, or None when its model is missing."""
     # A missing model is an ops state (503 + /health); a broken taxonomy is a config bug and
     # must stop startup, so TaxonomyError is not caught here.
     taxonomy = Taxonomy.load(settings.taxonomy_path, packaged=PACKAGED_TAXONOMY[settings.backend])
@@ -67,7 +68,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.storage = storage or LocalImageStorage(settings.upload_dir)
-        app.state.service = _build_service(settings, classifier)
+        app.state.service = build_service(settings, classifier)
         yield
 
     app = FastAPI(title="Aurora Images API", version=__version__, lifespan=lifespan)
