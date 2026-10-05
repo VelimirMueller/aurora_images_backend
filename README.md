@@ -175,9 +175,9 @@ The text tower runs only when label texts change (a cache miss): about 9 s for 1
 with a ~3.2 GB memory peak (the fp32 Gemma vocabulary table alone is 786 MB), and then it is
 dropped. Docker images ship with the cache built, so containers never load it unless you use a
 custom taxonomy. In that case, give the first start about 4 GB of memory and mount the cache
-directory. With the int8 text tower the image was 1.77 GB and the container was ready in
-1.5 s using ~690 MB of RAM (2026-10-02). The fp32 text tower adds ~850 MB to the image; size
-and RSS have not been re-measured since that change.
+directory. The SigLIP image is 3.48 GB. The container is ready in 1.3 s
+(label cache built in) and uses ~790 MiB of RAM after the first classification (measured
+2026-10-05, Docker 29.4 on an M-series Mac).
 
 Both towers are **fp32 on purpose**:
 - In a spike, the int8 image tower misread an aurora painting as a boat.
