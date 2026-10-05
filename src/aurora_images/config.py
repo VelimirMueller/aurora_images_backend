@@ -18,8 +18,14 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=5 * 1024 * 1024, gt=0)
     max_image_pixels: int = Field(default=40_000_000, gt=0)
     model_path: Path = Path("models/mobilenetv2-12.onnx")
-    labels_path: Path = Path("models/imagenet_classes.txt")
+    taxonomy_path: Path | None = Field(
+        default=None, description="Topic tree YAML; None uses the packaged ImageNet taxonomy."
+    )
     top_k: int = Field(default=5, ge=1, le=20)
+    topic_min_score: float = Field(default=0.05, ge=0, le=1)
+    uncertain_below: float = Field(
+        default=0.5, ge=0, le=1, description="Flag a result when the best root topic scores lower."
+    )
 
 
 @lru_cache

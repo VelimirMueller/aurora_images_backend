@@ -26,12 +26,12 @@ def test_upload_stores_image_under_generated_id(client: TestClient, settings: Se
     "filename", ["../../evil.png", "/etc/passwd", "..\\..\\evil.png", "uploads/../../x.py"]
 )
 def test_client_filename_never_reaches_the_filesystem(
-    client: TestClient, settings: Settings, tmp_path: Path, filename: str
+    client: TestClient, settings: Settings, tmp_path: Path, taxonomy_file: Path, filename: str
 ) -> None:
     response = client.post("/v1/images", files={"image": (filename, make_image(), "image/png")})
 
     assert response.status_code == 201
-    written = [p for p in tmp_path.rglob("*") if p.is_file()]
+    written = [p for p in tmp_path.rglob("*") if p.is_file() and p != taxonomy_file]
     assert written == [settings.upload_dir / f"{response.json()['id']}.png"]
 
 
@@ -76,17 +76,47 @@ def test_oversized_upload_is_rejected(client: TestClient, settings: Settings) ->
     assert not settings.upload_dir.exists()
 
 
-def test_classification_returns_top_k(client: TestClient, settings: Settings) -> None:
+def test_classification_returns_labels_paths_and_topics(
+    client: TestClient, settings: Settings
+) -> None:
     response = client.post(
         "/v1/classifications", files={"image": ("a.webp", make_image("WEBP"), "image/webp")}
     )
 
     assert response.status_code == 200
-    assert response.json() == {
-        "model": "fake-model",
-        "predictions": [{"label": "aurora", "score": 0.9}, {"label": "sky", "score": 0.1}],
+    body = response.json()
+    assert body["primary"] == {
+        "id": "n1",
+        "label": "beagle",
+        "score": 0.5,
+        "topic": "dog",
+        "path": ["animal", "mammal", "dog", "beagle"],
     }
+    assert [label["label"] for label in body["labels"]] == ["beagle", "husky", "tabby"]
+    # animal = beagle + husky + tabby; dog = beagle + husky; landscape (0.04) is below 0.05.
+    assert body["topic"] == {"id": "animal", "parent": None, "depth": 0, "score": 0.9}
+    assert {t["id"]: t["score"] for t in body["topics"]} == {
+        "animal": 0.9,
+        "mammal": 0.9,
+        "dog": 0.8,
+        "vehicle": 0.06,
+        "bicycle": 0.06,
+    }
+    assert body["uncertain"] is False
+    assert body["model"] == {"name": "fake-model", "taxonomy_version": 7}
+    assert len(body["image"]["sha256"]) == 64
+    assert set(body["timings_ms"]) == {"inference", "rollup", "total"}
     assert not settings.upload_dir.exists(), "classification must not persist the image"
+
+
+def test_topics_are_sorted_best_first_with_parents_before_equal_children(
+    client: TestClient,
+) -> None:
+    body = client.post(
+        "/v1/classifications", files={"image": ("a.png", make_image(), "image/png")}
+    ).json()
+
+    assert [t["id"] for t in body["topics"]] == ["animal", "mammal", "dog", "vehicle", "bicycle"]
 
 
 def test_classification_without_model_is_503(client_without_model: TestClient) -> None:
@@ -104,3 +134,22 @@ def test_cors_allows_only_configured_origins(client: TestClient) -> None:
     assert allowed.headers["access-control-allow-origin"] == "http://localhost:5173"
     assert "access-control-allow-origin" not in denied.headers
     assert "access-control-allow-credentials" not in allowed.headers
+
+
+def test_every_response_carries_a_request_id(client: TestClient) -> None:
+    ok = client.post("/v1/classifications", files={"image": ("a.png", make_image(), "image/png")})
+    rejected = client.post("/v1/images", files={"image": ("a.png", b"nope", "image/png")})
+
+    assert ok.json()["request_id"] == ok.headers["x-request-id"]
+    assert len(rejected.headers["x-request-id"]) == 32
+
+
+@pytest.mark.parametrize(
+    ("incoming", "kept"), [("trace-123.abc", True), ("bad id\r\nx", False), ("x" * 65, False)]
+)
+def test_caller_request_id_is_kept_only_when_safe(
+    client: TestClient, incoming: str, kept: bool
+) -> None:
+    response = client.get("/health", headers={"X-Request-ID": incoming})
+
+    assert (response.headers["x-request-id"] == incoming) is kept
