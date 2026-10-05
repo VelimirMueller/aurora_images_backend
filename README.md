@@ -1,6 +1,6 @@
-# Aurora Images API
+# Aurorae Images API
 
-[![CI](https://github.com/VelimirMueller/aurora_images_backend/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/VelimirMueller/aurora_images_backend/actions/workflows/ci.yml)
+[![CI](https://github.com/VelimirMueller/aurorae_images_backend/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/VelimirMueller/aurorae_images_backend/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A FastAPI service that classifies any image into a label **and** its place in a topic tree
@@ -19,7 +19,7 @@ external API. It is the backend for the Aurorae image frontend.
   model can be unsure *which* building (hut 0.32, boathouse 0.14, barn 0.11) but sure that it
   is a building (0.80).
 - **Editable taxonomy**: generated from WordNet, committed as YAML; point
-  `AURORA_TAXONOMY_PATH` at your own file.
+  `AURORAE_TAXONOMY_PATH` at your own file.
 - **Typed contract**: Pydantic response models drive the OpenAPI schema at `/docs`.
 
 ## Quick start
@@ -30,7 +30,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.12.
 uv sync                                  # install runtime + dev dependencies from uv.lock
 uv run python scripts/fetch_model.py     # both backends, pinned + SHA-256 verified (~1.5 GB)
                                          # or: fetch_model.py siglip | fetch_model.py mobilenet
-uv run uvicorn aurora_images.main:create_app --factory --reload
+uv run uvicorn aurorae_images.main:create_app --factory --reload
 ```
 
 Open http://localhost:8000/docs, or:
@@ -46,9 +46,9 @@ cache automatically.
 With Docker (weights are fetched and the label cache is built at image build time):
 
 ```bash
-docker build -t aurora-images .                              # SigLIP (default)
-docker build --build-arg BACKEND=mobilenet -t aurora-images:small .   # 14 MB of weights
-docker run -p 8000:8000 -v aurora-uploads:/data/uploads aurora-images
+docker build -t aurorae-images .                              # SigLIP (default)
+docker build --build-arg BACKEND=mobilenet -t aurorae-images:small .   # 14 MB of weights
+docker run -p 8000:8000 -v aurora-uploads:/data/uploads aurorae-images
 ```
 
 ## API
@@ -105,9 +105,9 @@ Spot checks on six Wikimedia Commons photos (2026-10-02); the real numbers are i
 |---|---|
 | `primary` | The most likely label, with the path from its root topic |
 | `topic` | The most likely root ("meta") topic, such as `animal`, `vehicle` or `building and structure` |
-| `labels` | Top-k labels (`AURORA_TOP_K`) |
-| `topics` | Every topic scoring at least `AURORA_TOPIC_MIN_SCORE`, best first |
-| `uncertain` | `true` when the root topic score is below `AURORA_UNCERTAIN_BELOW` |
+| `labels` | Top-k labels (`AURORAE_TOP_K`) |
+| `topics` | Every topic scoring at least `AURORAE_TOPIC_MIN_SCORE`, best first |
+| `uncertain` | `true` when the root topic score is below `AURORAE_UNCERTAIN_BELOW` |
 
 Every response, errors included, carries an `X-Request-ID` header, which is also written to the
 access log. A caller-supplied `X-Request-ID` is kept when it is 1–64 characters of
@@ -120,8 +120,8 @@ Two packaged taxonomies, one per backend:
 
 | File | Backend | Topics | Labels |
 |---|---|---|---|
-| [`taxonomy_open.yaml`](src/aurora_images/data/taxonomy_open.yaml) | `siglip` | 57 (22 roots) | 1068: extends the ImageNet file with 68 more |
-| [`taxonomy.yaml`](src/aurora_images/data/taxonomy.yaml) | `mobilenet` | 53 (20 roots) | 1000, `index` = model output |
+| [`taxonomy_open.yaml`](src/aurorae_images/data/taxonomy_open.yaml) | `siglip` | 57 (22 roots) | 1068: extends the ImageNet file with 68 more |
+| [`taxonomy.yaml`](src/aurorae_images/data/taxonomy.yaml) | `mobilenet` | 53 (20 roots) | 1000, `index` = model output |
 
 ```yaml
 topics:
@@ -135,7 +135,7 @@ labels:
 which is the easiest way to add labels: a few lines on top of the packaged tree.
 
 ```yaml
-# my-taxonomy.yaml, used with AURORA_TAXONOMY_PATH=my-taxonomy.yaml
+# my-taxonomy.yaml, used with AURORAE_TAXONOMY_PATH=my-taxonomy.yaml
 extends: package:taxonomy_open.yaml
 topics:
   - {id: aurora photo, parent: sky}
@@ -154,7 +154,7 @@ mouse). Every label text must be unique, or two labels get the same embedding.
 `scripts/build_taxonomy.py` generates both files from WordNet: each ImageNet label goes
 under the topic whose WordNet anchor is its *closest* hypernym. Its `TOPICS`, `OVERRIDES`,
 `PROMPTS` and `OPEN_LABELS` tables are the source of truth: edit them and rerun. For your
-own deployment you can also edit a copy of the YAML and set `AURORA_TAXONOMY_PATH`. On startup the service checks the tree
+own deployment you can also edit a copy of the YAML and set `AURORAE_TAXONOMY_PATH`. On startup the service checks the tree
 (unknown parents, cycles, duplicate ids, gaps in the indices, label count against the model's
 outputs) and refuses to start if it is broken. This holds even when the model is missing: a
 missing model is an ops state (503), while a broken taxonomy is a config bug.
@@ -163,21 +163,21 @@ If the model files are missing, the service still starts: `/health` reports
 
 ### Backends
 
-| `AURORA_BACKEND` | Model | Labels | Inference (CPU) | Weights |
+| `AURORAE_BACKEND` | Model | Labels | Inference (CPU) | Weights |
 |---|---|---|---|---|
 | `siglip` (default) | SigLIP 2 base/16, 224 px, fp32 image and text towers | any text | ~30 ms | ~1.5 GB |
 | `mobilenet` | MobileNetV2-12 | 1000 ImageNet classes | ~5 ms | 14 MB |
 
 The build-time label cache covers the packaged taxonomy. With a custom
-`AURORA_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
-`AURORA_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
+`AURORAE_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
+`AURORAE_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
 The text tower runs only when label texts change (a cache miss): about 9 s for 1068 labels
 with a ~3.2 GB memory peak (the fp32 Gemma vocabulary table alone is 786 MB), and then it is
 dropped. Docker images ship with the cache built, so containers never load it unless you use a
 custom taxonomy. In that case, give the first start about 4 GB of memory and mount the cache
-directory. With the int8 text tower the image was 1.77 GB and the container was ready in
-1.5 s using ~690 MB of RAM (2026-10-02). The fp32 text tower adds ~850 MB to the image; size
-and RSS have not been re-measured since that change.
+directory. The SigLIP image is 3.48 GB. The container is ready in 1.3 s
+(label cache built in) and uses ~790 MiB of RAM after the first classification (measured
+2026-10-05, Docker 29.4 on an M-series Mac).
 
 Both towers are **fp32 on purpose**:
 - In a spike, the int8 image tower misread an aurora painting as a boat.
@@ -189,7 +189,7 @@ Both towers are **fp32 on purpose**:
 ## Runtime labels and corrections
 
 Two admin endpoints change what the server knows while it runs. They need
-`Authorization: Bearer $AURORA_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
+`Authorization: Bearer $AURORAE_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
 
 | Method | Path | Does |
 |---|---|---|
@@ -199,7 +199,7 @@ Two admin endpoints change what the server knows while it runs. They need
 | `POST` | `/v1/feedback` | `image` + `label_id`: the correct label for this picture |
 
 ```bash
-curl -H "Authorization: Bearer $AURORA_ADMIN_TOKEN" -H 'content-type: application/json' \
+curl -H "Authorization: Bearer $AURORAE_ADMIN_TOKEN" -H 'content-type: application/json' \
   -d '{"name": "rice paddy", "topic": "landscape", "prompt": "a green rice paddy field"}' \
   http://localhost:8000/v1/labels
 ```
@@ -209,10 +209,10 @@ curl -H "Authorization: Bearer $AURORA_ADMIN_TOKEN" -H 'content-type: applicatio
   is dropped afterwards. The running service keeps answering meanwhile. The new service is
   built completely and then swapped in with one assignment, so no request sees a half-updated
   model.
-- **Persistence.** Runtime labels live in `$AURORA_DATA_DIR/labels.yaml`, an ordinary taxonomy
+- **Persistence.** Runtime labels live in `$AURORAE_DATA_DIR/labels.yaml`, an ordinary taxonomy
   file that `extends` the configured base. It survives restarts and can be reviewed and edited.
   A change is staged and validated first; a failed change leaves file and service as they were.
-- **Corrections** are stored in `$AURORA_DATA_DIR/feedback.sqlite3`, keyed by the picture's
+- **Corrections** are stored in `$AURORAE_DATA_DIR/feedback.sqlite3`, keyed by the picture's
   difference hash. When the same picture comes back (re-encoded or resized), the response
   carries `correction` next to the unchanged model output. Clients should prefer it.
   Different photos are never affected. Semantic embeddings cannot do this safely: on the eval
@@ -241,7 +241,7 @@ report is in the job summary.
 
 ```bash
 uv run python scripts/evaluate.py                         # siglip
-AURORA_BACKEND=mobilenet uv run python scripts/evaluate.py
+AURORAE_BACKEND=mobilenet uv run python scripts/evaluate.py
 ```
 
 What the misses show:
@@ -266,25 +266,25 @@ unavailable. The fix is then to rebuild the set: `scripts/build_eval_manifest.py
 
 ## Configuration
 
-All settings are environment variables with the `AURORA_` prefix. See [`.env.example`](.env.example).
+All settings are environment variables with the `AURORAE_` prefix. See [`.env.example`](.env.example).
 
 | Variable                  | Default                                        |
 |---------------------------|------------------------------------------------|
-| `AURORA_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
-| `AURORA_UPLOAD_DIR`       | `uploads`                                      |
-| `AURORA_DATA_DIR`         | `data` (runtime labels + corrections)          |
-| `AURORA_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
-| `AURORA_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
-| `AURORA_MAX_IMAGE_PIXELS` | `40000000`                                     |
-| `AURORA_BACKEND`          | `siglip` (or `mobilenet`)                      |
-| `AURORA_SIGLIP_DIR`       | `models/siglip2-base-patch16-224`              |
-| `AURORA_LABEL_CACHE_DIR`  | `models/label_cache`                           |
-| `AURORA_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
-| `AURORA_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
-| `AURORA_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
-| `AURORA_TOP_K`            | `5`                                            |
-| `AURORA_TOPIC_MIN_SCORE`  | `0.05`                                         |
-| `AURORA_UNCERTAIN_BELOW`  | `0.5`                                          |
+| `AURORAE_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
+| `AURORAE_UPLOAD_DIR`       | `uploads`                                      |
+| `AURORAE_DATA_DIR`         | `data` (runtime labels + corrections)          |
+| `AURORAE_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
+| `AURORAE_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
+| `AURORAE_MAX_IMAGE_PIXELS` | `40000000`                                     |
+| `AURORAE_BACKEND`          | `siglip` (or `mobilenet`)                      |
+| `AURORAE_SIGLIP_DIR`       | `models/siglip2-base-patch16-224`              |
+| `AURORAE_LABEL_CACHE_DIR`  | `models/label_cache`                           |
+| `AURORAE_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
+| `AURORAE_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
+| `AURORAE_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
+| `AURORAE_TOP_K`            | `5`                                            |
+| `AURORAE_TOPIC_MIN_SCORE`  | `0.05`                                         |
+| `AURORAE_UNCERTAIN_BELOW`  | `0.5`                                          |
 
 ## Development
 
@@ -299,7 +299,7 @@ CI (`.github/workflows/ci.yml`) runs the same checks, the real-model test, a Doc
 and a container smoke test. Dependabot watches Python, Actions and Docker dependencies.
 
 ```
-src/aurora_images/
+src/aurorae_images/
   main.py         app factory, CORS, lifespan (loads storage + classifier)
   api/routes.py   HTTP layer and dependency wiring
   images.py       bounded reads and image validation
@@ -340,7 +340,7 @@ here with its source and license before it is used.
   and files open with `O_EXCL`, so an upload can never overwrite an existing file.
 - CORS allows only the configured origins, without credentials.
 - Endpoints that change server state (`/v1/labels`, `/v1/feedback`) need a bearer token
-  (`AURORA_ADMIN_TOKEN`, compared in constant time) and are absent without one.
+  (`AURORAE_ADMIN_TOKEN`, compared in constant time) and are absent without one.
 - Classification and uploads are unauthenticated. Put the service behind a gateway with auth
   and rate limits before you expose it publicly.
 

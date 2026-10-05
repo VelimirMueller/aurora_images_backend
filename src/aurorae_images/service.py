@@ -5,8 +5,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from aurora_images.classifier import Classifier
-from aurora_images.taxonomy import Label, Taxonomy, TaxonomyError
+from aurorae_images.classifier import Classifier
+from aurorae_images.taxonomy import Label, Taxonomy, TaxonomyError
 
 
 @dataclass(frozen=True)

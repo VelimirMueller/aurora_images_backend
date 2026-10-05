@@ -1,11 +1,11 @@
 """Embed the configured taxonomy's labels now, so the server starts in under a second.
 
-Runs at Docker build time. Uses the same settings (AURORA_*) as the server.
+Runs at Docker build time. Uses the same settings (AURORAE_*) as the server.
 Usage: uv run python scripts/warm_label_cache.py
 """
 
-from aurora_images.config import get_settings
-from aurora_images.main import build_service
+from aurorae_images.config import get_settings
+from aurorae_images.main import build_service
 
 
 def main() -> None:

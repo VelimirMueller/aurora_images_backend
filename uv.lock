@@ -78,7 +78,7 @@ wheels = [
 ]
 
 [[package]]
-name = "aurora-images"
+name = "aurorae-images"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

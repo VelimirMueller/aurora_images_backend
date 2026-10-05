@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from aurora_images.classifier import ModelNotAvailableError, OnnxClassifier, preprocess, softmax
-from aurora_images.images import InvalidImageError, validate_image
-from aurora_images.service import ClassificationService
-from aurora_images.storage import LocalImageStorage
-from aurora_images.taxonomy import Taxonomy
+from aurorae_images.classifier import ModelNotAvailableError, OnnxClassifier, preprocess, softmax
+from aurorae_images.images import InvalidImageError, validate_image
+from aurorae_images.service import ClassificationService
+from aurorae_images.storage import LocalImageStorage
+from aurorae_images.taxonomy import Taxonomy
 from tests.conftest import make_image
 
 MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
@@ -59,7 +59,7 @@ def test_storage_removes_partial_file_on_write_error(
     def fail(fd: int) -> None:
         raise OSError("disk full")
 
-    monkeypatch.setattr("aurora_images.storage.os.fsync", fail)
+    monkeypatch.setattr("aurorae_images.storage.os.fsync", fail)
 
     with pytest.raises(OSError, match="disk full"):
         LocalImageStorage(tmp_path).save(b"a", "png")
@@ -102,7 +102,7 @@ def test_onnx_classifier_end_to_end_with_packaged_taxonomy() -> None:
 
 
 def test_sessions_never_busy_spin() -> None:
-    from aurora_images.classifier import session_options
+    from aurorae_images.classifier import session_options
 
     options = session_options(threads=3)
 

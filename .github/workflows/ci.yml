@@ -53,9 +53,9 @@ jobs:
     needs: check
     steps:
       - uses: actions/checkout@v4
-      - run: docker build --build-arg BACKEND=mobilenet -t aurora-images:ci .
+      - run: docker build --build-arg BACKEND=mobilenet -t aurorae-images:ci .
       - name: Smoke test container
         run: |
-          docker run -d --rm --name api -p 8000:8000 aurora-images:ci
+          docker run -d --rm --name api -p 8000:8000 aurorae-images:ci
           for i in $(seq 1 30); do curl -sf localhost:8000/health && exit 0; sleep 1; done
           docker logs api; exit 1
