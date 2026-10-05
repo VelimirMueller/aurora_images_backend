@@ -1,1 +1,0 @@
-from src.scraper import scrape_url
