@@ -23,13 +23,13 @@ from pathlib import Path
 
 import yaml
 
+from synthwerk_vision.evaluation import USER_AGENT
 from synthwerk_vision.images import dhash
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "eval" / "manifest.yaml"
 IMAGES = ROOT / "eval" / "images"
 API = "https://commons.wikimedia.org/w/api.php"
-USER_AGENT = "synthwerk-vision-eval/0.1 (https://github.com/VelimirMueller/synthwerk-vision)"
 PER_QUERY = 2
 FREE_LICENSE = re.compile(r"^(CC BY(-SA)? [0-9.]+|CC0( 1\.0)?|Public domain)$", re.IGNORECASE)
 

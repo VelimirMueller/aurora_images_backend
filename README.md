@@ -70,7 +70,7 @@ docker run -p 8000:8000 -v synthwerk-vision-uploads:/data/uploads synthwerk-visi
 | POST   | `/v1/classifications` | Classify an image (not stored)              | 200     | 413, 415, 422, 503 |
 | *admin* | `/v1/labels`, `/v1/feedback` | See [Runtime labels and corrections](#runtime-labels-and-corrections) | | 401, 404, 409 |
 
-- `/healthz` and `/readyz` from the skeleton replace `/health` in E1 (change list step 9).
+- Today the service has only `/health`. `/healthz` and `/readyz` replace it in E1 (change list step 9).
 - Both POST endpoints take `multipart/form-data` with one field, `image` (JPEG, PNG or WebP).
 
 Example: a photo of a wooden hut in a rice field (real output, `top_k=3`, ids shortened):

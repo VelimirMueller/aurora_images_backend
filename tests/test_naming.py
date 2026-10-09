@@ -2,6 +2,7 @@
 
 The natural phenomenon ("aurora borealis", "aurora corona", ...) is real content and stays,
 so the pattern matches only brand spellings, never a bare "aurora".
+The guard is git-only by design: it checks tracked files and skips outside a checkout.
 """
 
 import shutil
