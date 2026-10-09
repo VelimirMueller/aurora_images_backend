@@ -1,26 +1,33 @@
-# Aurorae Images API
+<!-- Synthwerk README skeleton (D-16), from synthwerk-blueprint templates/_common/README.md. -->
+# synthwerk-vision
 
-[![CI](https://github.com/VelimirMueller/aurorae_images_backend/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/VelimirMueller/aurorae_images_backend/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+**Synthwerk** · image classification with an open vocabulary and a topic tree
 
-A FastAPI service that classifies any image into a label **and** its place in a topic tree
-(`hut → building → building and structure`, `beagle → dog → mammal → animal`) and returns a
-detailed JSON answer. It runs locally on CPU with ONNX Runtime and needs no GPU and no
-external API. It is the backend for the Aurorae image frontend.
+[![ci](https://github.com/VelimirMueller/synthwerk-vision/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/VelimirMueller/synthwerk-vision/actions/workflows/ci.yml)
+[![deliver](https://github.com/VelimirMueller/synthwerk-vision/actions/workflows/deliver.yml/badge.svg?branch=main)](https://github.com/VelimirMueller/synthwerk-vision/actions/workflows/deliver.yml)
+[![stack](https://img.shields.io/badge/stack-Python%203.12%20%C2%B7%20FastAPI%20%C2%B7%20ONNX%20Runtime-00FFF7)](#development)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![contracts](https://img.shields.io/badge/contracts-none_yet-informational)](https://github.com/VelimirMueller/synthwerk-contracts)
 
-- **Safe uploads**: the client filename is never used, the type comes from the decoded image
-  and not from `Content-Type`, and size and pixel limits are enforced while streaming.
-- **Open vocabulary** (default backend): [SigLIP 2](https://huggingface.co/google/siglip2-base-patch16-224)
-  embeds the image and every label *text* into one space, so a label is just a string. The
-  packaged taxonomy has 1068 labels: the 1000 ImageNet classes plus 68 everyday ones ImageNet
-  lacks (hut, skyscraper, smartphone, sunset, aurora borealis, painting, screenshot …).
-  Add a label by adding a line of YAML; nothing is retrained.
-- **Topic roll-up**: a topic's score is the summed probability of every label below it. The
-  model can be unsure *which* building (hut 0.32, boathouse 0.14, barn 0.11) but sure that it
-  is a building (0.80).
-- **Editable taxonomy**: generated from WordNet, committed as YAML; point
-  `AURORAE_TAXONOMY_PATH` at your own file.
-- **Typed contract**: Pydantic response models drive the OpenAPI schema at `/docs`.
+## In 30 seconds
+
+- The service gives an image a label and the label's place in a topic tree
+  (`hut → building → building and structure`, `beagle → dog → mammal → animal`).
+- SigLIP 2 is the default backend. A label is a text, so a new label needs no training.
+- It runs on CPU with ONNX Runtime: about 35 ms per image on an M-series Mac, no GPU, no external API.
+- The eval gate scores **93.1 %** root-topic accuracy on 58 frozen photos. CI fails below 90 %.
+
+## Where it fits
+
+```mermaid
+flowchart LR
+  widgets[synthwerk-widgets<br/>vision widget] --> svc[synthwerk-vision]
+  studio[synthwerk-studio] --> svc
+  svc --> ort[ONNX Runtime<br/>SigLIP 2 / MobileNetV2]
+  svc --> disk[(local disk<br/>uploads, labels, corrections)]
+```
+
+- Ecosystem map: [synthwerk](https://github.com/VelimirMueller/synthwerk).
 
 ## Quick start
 
@@ -30,7 +37,7 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.12.
 uv sync                                  # install runtime + dev dependencies from uv.lock
 uv run python scripts/fetch_model.py     # both backends, pinned + SHA-256 verified (~1.5 GB)
                                          # or: fetch_model.py siglip | fetch_model.py mobilenet
-uv run uvicorn aurorae_images.main:create_app --factory --reload
+uv run uvicorn synthwerk_vision.main:create_app --factory --reload
 ```
 
 Open http://localhost:8000/docs, or:
@@ -46,12 +53,15 @@ cache automatically.
 With Docker (weights are fetched and the label cache is built at image build time):
 
 ```bash
-docker build -t aurorae-images .                              # SigLIP (default)
-docker build --build-arg BACKEND=mobilenet -t aurorae-images:small .   # 14 MB of weights
-docker run -p 8000:8000 -v aurora-uploads:/data/uploads aurorae-images
+docker build -t synthwerk-vision .                                     # SigLIP (default)
+docker build --build-arg BACKEND=mobilenet -t synthwerk-vision:small . # 14 MB of weights
+docker run -p 8000:8000 -v synthwerk-vision-uploads:/data/uploads synthwerk-vision
 ```
 
-## API
+## API and events
+
+- API spec: FastAPI serves it at `/docs` and `/openapi.json`. The contracts spec is planned (E1).
+- Events: none yet.
 
 | Method | Path                  | Purpose                                     | Success | Errors        |
 |--------|-----------------------|---------------------------------------------|---------|---------------|
@@ -60,7 +70,8 @@ docker run -p 8000:8000 -v aurora-uploads:/data/uploads aurorae-images
 | POST   | `/v1/classifications` | Classify an image (not stored)              | 200     | 413, 415, 422, 503 |
 | *admin* | `/v1/labels`, `/v1/feedback` | See [Runtime labels and corrections](#runtime-labels-and-corrections) | | 401, 404, 409 |
 
-Both POST endpoints take `multipart/form-data` with one field, `image` (JPEG, PNG or WebP).
+- `/healthz` and `/readyz` from the skeleton replace `/health` in E1 (change list step 9).
+- Both POST endpoints take `multipart/form-data` with one field, `image` (JPEG, PNG or WebP).
 
 Example: a photo of a wooden hut in a rice field (real output, `top_k=3`, ids shortened):
 
@@ -105,14 +116,14 @@ Spot checks on six Wikimedia Commons photos (2026-10-02); the real numbers are i
 |---|---|
 | `primary` | The most likely label, with the path from its root topic |
 | `topic` | The most likely root ("meta") topic, such as `animal`, `vehicle` or `building and structure` |
-| `labels` | Top-k labels (`AURORAE_TOP_K`) |
-| `topics` | Every topic scoring at least `AURORAE_TOPIC_MIN_SCORE`, best first |
-| `uncertain` | `true` when the root topic score is below `AURORAE_UNCERTAIN_BELOW` |
+| `labels` | Top-k labels (`SYNTHWERK_TOP_K`) |
+| `topics` | Every topic scoring at least `SYNTHWERK_TOPIC_MIN_SCORE`, best first |
+| `uncertain` | `true` when the root topic score is below `SYNTHWERK_UNCERTAIN_BELOW` |
+| `correction` | An admin correction for this picture, or `null` (see [Runtime labels and corrections](#runtime-labels-and-corrections)) |
 
-Every response, errors included, carries an `X-Request-ID` header, which is also written to the
-access log. A caller-supplied `X-Request-ID` is kept when it is 1–64 characters of
-`[A-Za-z0-9_.-]`; otherwise the server generates one. Classification responses repeat it as
-`request_id`.
+Every response, errors included, carries an `X-Request-ID` header. A caller-supplied
+`X-Request-ID` is kept when it is 1–64 characters of `[A-Za-z0-9_.-]`; otherwise the server
+generates one. Classification responses repeat it as `request_id`.
 
 ## Taxonomy
 
@@ -120,8 +131,8 @@ Two packaged taxonomies, one per backend:
 
 | File | Backend | Topics | Labels |
 |---|---|---|---|
-| [`taxonomy_open.yaml`](src/aurorae_images/data/taxonomy_open.yaml) | `siglip` | 57 (22 roots) | 1068: extends the ImageNet file with 68 more |
-| [`taxonomy.yaml`](src/aurorae_images/data/taxonomy.yaml) | `mobilenet` | 53 (20 roots) | 1000, `index` = model output |
+| [`taxonomy_open.yaml`](src/synthwerk_vision/data/taxonomy_open.yaml) | `siglip` | 57 (22 roots) | 1068: extends the ImageNet file with 68 more |
+| [`taxonomy.yaml`](src/synthwerk_vision/data/taxonomy.yaml) | `mobilenet` | 53 (20 roots) | 1000, `index` = model output |
 
 ```yaml
 topics:
@@ -135,7 +146,7 @@ labels:
 which is the easiest way to add labels: a few lines on top of the packaged tree.
 
 ```yaml
-# my-taxonomy.yaml, used with AURORAE_TAXONOMY_PATH=my-taxonomy.yaml
+# my-taxonomy.yaml, used with SYNTHWERK_TAXONOMY_PATH=my-taxonomy.yaml
 extends: package:taxonomy_open.yaml
 topics:
   - {id: aurora photo, parent: sky}
@@ -154,7 +165,7 @@ mouse). Every label text must be unique, or two labels get the same embedding.
 `scripts/build_taxonomy.py` generates both files from WordNet: each ImageNet label goes
 under the topic whose WordNet anchor is its *closest* hypernym. Its `TOPICS`, `OVERRIDES`,
 `PROMPTS` and `OPEN_LABELS` tables are the source of truth: edit them and rerun. For your
-own deployment you can also edit a copy of the YAML and set `AURORAE_TAXONOMY_PATH`. On startup the service checks the tree
+own deployment you can also edit a copy of the YAML and set `SYNTHWERK_TAXONOMY_PATH`. On startup the service checks the tree
 (unknown parents, cycles, duplicate ids, gaps in the indices, label count against the model's
 outputs) and refuses to start if it is broken. This holds even when the model is missing: a
 missing model is an ops state (503), while a broken taxonomy is a config bug.
@@ -163,14 +174,14 @@ If the model files are missing, the service still starts: `/health` reports
 
 ### Backends
 
-| `AURORAE_BACKEND` | Model | Labels | Inference (CPU) | Weights |
+| `SYNTHWERK_BACKEND` | Model | Labels | Inference (CPU) | Weights |
 |---|---|---|---|---|
 | `siglip` (default) | SigLIP 2 base/16, 224 px, fp32 image and text towers | any text | ~30 ms | ~1.5 GB |
 | `mobilenet` | MobileNetV2-12 | 1000 ImageNet classes | ~5 ms | 14 MB |
 
 The build-time label cache covers the packaged taxonomy. With a custom
-`AURORAE_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
-`AURORAE_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
+`SYNTHWERK_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
+`SYNTHWERK_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
 The text tower runs only when label texts change (a cache miss): about 9 s for 1068 labels
 with a ~3.2 GB memory peak (the fp32 Gemma vocabulary table alone is 786 MB), and then it is
 dropped. Docker images ship with the cache built, so containers never load it unless you use a
@@ -189,7 +200,7 @@ Both towers are **fp32 on purpose**:
 ## Runtime labels and corrections
 
 Two admin endpoints change what the server knows while it runs. They need
-`Authorization: Bearer $AURORAE_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
+`Authorization: Bearer $SYNTHWERK_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
 
 | Method | Path | Does |
 |---|---|---|
@@ -199,7 +210,7 @@ Two admin endpoints change what the server knows while it runs. They need
 | `POST` | `/v1/feedback` | `image` + `label_id`: the correct label for this picture |
 
 ```bash
-curl -H "Authorization: Bearer $AURORAE_ADMIN_TOKEN" -H 'content-type: application/json' \
+curl -H "Authorization: Bearer $SYNTHWERK_ADMIN_TOKEN" -H 'content-type: application/json' \
   -d '{"name": "rice paddy", "topic": "landscape", "prompt": "a green rice paddy field"}' \
   http://localhost:8000/v1/labels
 ```
@@ -209,10 +220,10 @@ curl -H "Authorization: Bearer $AURORAE_ADMIN_TOKEN" -H 'content-type: applicati
   is dropped afterwards. The running service keeps answering meanwhile. The new service is
   built completely and then swapped in with one assignment, so no request sees a half-updated
   model.
-- **Persistence.** Runtime labels live in `$AURORAE_DATA_DIR/labels.yaml`, an ordinary taxonomy
+- **Persistence.** Runtime labels live in `$SYNTHWERK_DATA_DIR/labels.yaml`, an ordinary taxonomy
   file that `extends` the configured base. It survives restarts and can be reviewed and edited.
   A change is staged and validated first; a failed change leaves file and service as they were.
-- **Corrections** are stored in `$AURORAE_DATA_DIR/feedback.sqlite3`, keyed by the picture's
+- **Corrections** are stored in `$SYNTHWERK_DATA_DIR/feedback.sqlite3`, keyed by the picture's
   difference hash. When the same picture comes back (re-encoded or resized), the response
   carries `correction` next to the unchanged model output. Clients should prefer it.
   Different photos are never affected. Semantic embeddings cannot do this safely: on the eval
@@ -236,12 +247,12 @@ checked by eye. Mixed images accept more than one topic (a girl hugging her dog:
 Measured 2026-10-03. SigLIP scores the same on ARM (M-series) and x86 (GitHub runner), with the
 same four misses. That took the fp32 text tower: with int8 it fell to 83.0 % on x86 (see
 [Backends](#backends)). Latency depends heavily on the CPU. The intervals do not overlap, so the difference holds
-even on 58 images. CI runs the eval on every PR and on pushes to `main`/`dev` and fails below 90 % for SigLIP. The
+even on 58 images. CI runs the eval on every PR and on pushes to `main` and fails below 90 % for SigLIP. The
 report is in the job summary.
 
 ```bash
 uv run python scripts/evaluate.py                         # siglip
-AURORAE_BACKEND=mobilenet uv run python scripts/evaluate.py
+SYNTHWERK_BACKEND=mobilenet uv run python scripts/evaluate.py
 ```
 
 What the misses show:
@@ -266,57 +277,101 @@ unavailable. The fix is then to rebuild the set: `scripts/build_eval_manifest.py
 
 ## Configuration
 
-All settings are environment variables with the `AURORAE_` prefix. See [`.env.example`](.env.example).
+- All settings are environment variables with the prefix `SYNTHWERK_`. See [`.env.example`](.env.example).
+- **The old prefixes `AURORAE_` and `AURORA_` are ignored.** Rename them in every `.env` and deployment.
+- The service does not warn about old names. It uses the default value instead.
+- Names only. Secret values (`SYNTHWERK_ADMIN_TOKEN`) live in the environment, never in the repo.
 
-| Variable                  | Default                                        |
-|---------------------------|------------------------------------------------|
-| `AURORAE_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
-| `AURORAE_UPLOAD_DIR`       | `uploads`                                      |
-| `AURORAE_DATA_DIR`         | `data` (runtime labels + corrections)          |
-| `AURORAE_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
-| `AURORAE_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
-| `AURORAE_MAX_IMAGE_PIXELS` | `40000000`                                     |
-| `AURORAE_BACKEND`          | `siglip` (or `mobilenet`)                      |
-| `AURORAE_SIGLIP_DIR`       | `models/siglip2-base-patch16-224`              |
-| `AURORAE_LABEL_CACHE_DIR`  | `models/label_cache`                           |
-| `AURORAE_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
-| `AURORAE_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
-| `AURORAE_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
-| `AURORAE_TOP_K`            | `5`                                            |
-| `AURORAE_TOPIC_MIN_SCORE`  | `0.05`                                         |
-| `AURORAE_UNCERTAIN_BELOW`  | `0.5`                                          |
+| Variable                     | Default                                        |
+|------------------------------|------------------------------------------------|
+| `SYNTHWERK_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
+| `SYNTHWERK_UPLOAD_DIR`       | `uploads`                                      |
+| `SYNTHWERK_DATA_DIR`         | `data` (runtime labels + corrections)          |
+| `SYNTHWERK_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
+| `SYNTHWERK_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
+| `SYNTHWERK_MAX_IMAGE_PIXELS` | `40000000`                                     |
+| `SYNTHWERK_BACKEND`          | `siglip` (or `mobilenet`)                      |
+| `SYNTHWERK_SIGLIP_DIR`       | `models/siglip2-base-patch16-224`              |
+| `SYNTHWERK_LABEL_CACHE_DIR`  | `models/label_cache`                           |
+| `SYNTHWERK_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
+| `SYNTHWERK_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
+| `SYNTHWERK_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
+| `SYNTHWERK_TOP_K`            | `5`                                            |
+| `SYNTHWERK_TOPIC_MIN_SCORE`  | `0.05`                                         |
+| `SYNTHWERK_UNCERTAIN_BELOW`  | `0.5`                                          |
 
 ## Development
 
-```bash
-uv run pytest            # tests + coverage gate (90 %)
-uv run ruff check . && uv run ruff format --check .
-uv run mypy              # strict
-uv run pre-commit install
-```
-
-CI (`.github/workflows/ci.yml`) runs the same checks, the real-model test, a Docker build
-and a container smoke test. Dependabot watches Python, Actions and Docker dependencies.
-
-```
-src/aurorae_images/
-  main.py         app factory, CORS, lifespan (loads storage + classifier)
+```text
+src/synthwerk_vision/
+  main.py         app factory, CORS, request id, lifespan (loads storage + classifier)
   api/routes.py   HTTP layer and dependency wiring
-  images.py       bounded reads and image validation
+  api/admin.py    runtime labels and corrections (bearer token)
+  images.py       bounded reads, image validation, dHash
   storage.py      ImageStorage protocol + local disk implementation
   classifier.py   Classifier protocol (image -> probability vector) + MobileNetV2
   siglip.py       SigLIP 2: image/text towers, tokenizer, label-embedding cache
   taxonomy.py     topic tree, label paths, roll-up of probabilities into topic scores
+  runtime_labels.py  labels.yaml overlay + cross-process lock
+  feedback.py     corrections in SQLite, keyed by dHash
   service.py      classifier + taxonomy -> labels, topics, uncertainty, timings
   evaluation.py   manifest loading, cached downloads, metrics, markdown/JSON reports
   data/taxonomy_open.yaml, data/taxonomy.yaml
-  config.py       pydantic-settings
-scripts/fetch_model.py      pinned model download
-scripts/build_taxonomy.py   regenerate both taxonomies from WordNet (dev only)
-scripts/warm_label_cache.py embed label texts ahead of time (Docker build)
-scripts/evaluate.py         eval gate (root-topic accuracy, per-topic table, misses)
+  config.py       pydantic-settings (prefix SYNTHWERK_)
+scripts/fetch_model.py           pinned model download
+scripts/build_taxonomy.py        regenerate both taxonomies from WordNet (dev only)
+scripts/warm_label_cache.py      embed label texts ahead of time (Docker build)
+scripts/evaluate.py              eval gate (root-topic accuracy, per-topic table, misses)
 scripts/build_eval_manifest.py   rebuild the eval set from Commons (needs re-review)
+tests/                           unit tests with fakes, real-model tests (skip without weights),
+                                 rename guard (test_naming.py: the old brand name must not return)
 ```
+
+| Check | Command |
+|---|---|
+| Tests + coverage gate (90 %) | `uv run pytest` |
+| Lint and format | `uv run ruff check . && uv run ruff format --check .` |
+| Types (strict) | `uv run mypy` |
+| Eval gate | `uv run python scripts/evaluate.py --min-topic-accuracy 0.9` |
+| Git hooks | `uv run pre-commit install` |
+
+- Do not run two ONNX Runtime processes at once for a benchmark. They slow each other down.
+- CI: [`ci.yml`](.github/workflows/ci.yml) calls the blueprint workflow
+  [`py-ci.yml@v1`](https://github.com/VelimirMueller/synthwerk-blueprint/blob/main/.github/workflows/py-ci.yml)
+  (ruff, mypy strict, pytest without weights). Two local jobs add the rest:
+  - `model`: fetches the weights, runs all tests with the real models, and runs the eval gate.
+  - `docker-smoke`: builds the MobileNet image and checks `/health`.
+  - `gate` passes only when all jobs pass.
+- [`deliver.yml`](.github/workflows/deliver.yml) calls the blueprint
+  [`image.yml@v1`](https://github.com/VelimirMueller/synthwerk-blueprint/blob/main/.github/workflows/image.yml)
+  for the default SigLIP image: build, SBOM, Trivy scan.
+- Dependabot watches Python, Actions and Docker dependencies.
+
+### Branches
+
+- The repo is trunk-based (decision D-04). Work on `feat/*` or `chore/*`, open a PR to `main`.
+- **The `dev` branch is retired.** Do not open PRs to `dev`. CI does not run on pushes to `dev`.
+
+## Deploy
+
+- No deployment exists yet.
+- A push to `main` or a `v*` tag pushes the image to `ghcr.io/velimirmueller/synthwerk-vision`
+  and signs it with cosign.
+- Target (D-04): merge to `main` deploys to **dev**. A `vX.Y.Z` tag deploys to **stg**.
+  **prd** gets the same image digest after a manual approval.
+- Infrastructure: [synthwerk-infra](https://github.com/VelimirMueller/synthwerk-infra).
+
+## Features
+
+<!-- One row per docs/features/*.md. /feature-doc keeps this table current. -->
+
+| Feature | Status |
+|---|---|
+| [Image classification](docs/features/image-classification.md) | stable |
+| [Image upload](docs/features/image-upload.md) | beta |
+| [Runtime labels](docs/features/runtime-labels.md) | beta |
+| [Picture corrections](docs/features/picture-corrections.md) | beta |
+| [Classification eval gate](docs/features/classification-eval.md) | stable |
 
 ## Model and data
 
@@ -340,9 +395,10 @@ here with its source and license before it is used.
   and files open with `O_EXCL`, so an upload can never overwrite an existing file.
 - CORS allows only the configured origins, without credentials.
 - Endpoints that change server state (`/v1/labels`, `/v1/feedback`) need a bearer token
-  (`AURORAE_ADMIN_TOKEN`, compared in constant time) and are absent without one.
+  (`SYNTHWERK_ADMIN_TOKEN`, compared in constant time) and are absent without one.
 - Classification and uploads are unauthenticated. Put the service behind a gateway with auth
   and rate limits before you expose it publicly.
+- Report a vulnerability through a private GitHub security advisory on this repo.
 
 ## Roadmap
 
@@ -352,4 +408,4 @@ here with its source and license before it is used.
 
 ## License
 
-[MIT](LICENSE)
+- [MIT](LICENSE)
