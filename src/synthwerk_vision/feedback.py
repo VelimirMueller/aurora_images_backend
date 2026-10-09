@@ -14,8 +14,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from aurorae_images.images import dhash_distance
-from aurorae_images.runtime_labels import signature
+from synthwerk_vision.images import dhash_distance
+from synthwerk_vision.runtime_labels import signature
 
 MAX_DISTANCE = 8
 

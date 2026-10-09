@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
-from aurorae_images.config import Settings, get_settings
-from aurorae_images.feedback import FeedbackStore
-from aurorae_images.images import (
+from synthwerk_vision.config import Settings, get_settings
+from synthwerk_vision.feedback import FeedbackStore
+from synthwerk_vision.images import (
     InvalidImageError,
     UploadTooLargeError,
     ValidatedImage,
@@ -15,8 +15,8 @@ from aurorae_images.images import (
     read_limited,
     validate_image,
 )
-from aurorae_images.runtime_labels import signature
-from aurorae_images.schemas import (
+from synthwerk_vision.runtime_labels import signature
+from synthwerk_vision.schemas import (
     ClassificationOut,
     CorrectionOut,
     ErrorOut,
@@ -27,8 +27,8 @@ from aurorae_images.schemas import (
     ModelInfo,
     TopicOut,
 )
-from aurorae_images.service import Classification, ClassificationService, ScoredLabel, ScoredTopic
-from aurorae_images.storage import ImageStorage
+from synthwerk_vision.service import Classification, ClassificationService, ScoredLabel, ScoredTopic
+from synthwerk_vision.storage import ImageStorage
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
 """Endpoints that change what the server knows: runtime labels and corrections.
 
-They need `Authorization: Bearer <AURORAE_ADMIN_TOKEN>` and do not exist (404) when no token is
+They need `Authorization: Bearer <SYNTHWERK_ADMIN_TOKEN>` and do not exist (404) when no token is
 configured. A label change builds a complete new service next to the running one and swaps it
 in with one assignment, so in-flight requests finish on the old service and none sees a
 half-updated model.
@@ -14,19 +14,19 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, 
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
 
-from aurorae_images.api.routes import get_service, validated_image
-from aurorae_images.config import Settings, get_settings
-from aurorae_images.images import ValidatedImage, dhash
-from aurorae_images.runtime_labels import RuntimeLabelError, signature
-from aurorae_images.schemas import (
+from synthwerk_vision.api.routes import get_service, validated_image
+from synthwerk_vision.config import Settings, get_settings
+from synthwerk_vision.images import ValidatedImage, dhash
+from synthwerk_vision.runtime_labels import RuntimeLabelError, signature
+from synthwerk_vision.schemas import (
     ErrorOut,
     FeedbackOut,
     LabelIn,
     RuntimeLabelOut,
     RuntimeLabelsOut,
 )
-from aurorae_images.service import ClassificationService
-from aurorae_images.taxonomy import Taxonomy, TaxonomyError
+from synthwerk_vision.service import ClassificationService
+from synthwerk_vision.taxonomy import Taxonomy, TaxonomyError
 
 router = APIRouter(tags=["admin"])
 _bearer = HTTPBearer(auto_error=False)

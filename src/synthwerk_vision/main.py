@@ -9,19 +9,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from aurorae_images import __version__
-from aurorae_images.api import admin
-from aurorae_images.api.routes import router
-from aurorae_images.classifier import Classifier, ModelNotAvailableError, OnnxClassifier
-from aurorae_images.config import Settings, get_settings
-from aurorae_images.feedback import FeedbackStore
-from aurorae_images.runtime_labels import RuntimeLabels, signature
-from aurorae_images.service import ClassificationService
-from aurorae_images.siglip import SiglipClassifier
-from aurorae_images.storage import ImageStorage, LocalImageStorage
-from aurorae_images.taxonomy import Taxonomy
+from synthwerk_vision import __version__
+from synthwerk_vision.api import admin
+from synthwerk_vision.api.routes import router
+from synthwerk_vision.classifier import Classifier, ModelNotAvailableError, OnnxClassifier
+from synthwerk_vision.config import Settings, get_settings
+from synthwerk_vision.feedback import FeedbackStore
+from synthwerk_vision.runtime_labels import RuntimeLabels, signature
+from synthwerk_vision.service import ClassificationService
+from synthwerk_vision.siglip import SiglipClassifier
+from synthwerk_vision.storage import ImageStorage, LocalImageStorage
+from synthwerk_vision.taxonomy import Taxonomy
 
-logger = logging.getLogger("aurorae_images")
+logger = logging.getLogger("synthwerk_vision")
 
 # Accept a caller's X-Request-ID only when it is short and log-safe; otherwise mint one.
 _REQUEST_ID = re.compile(r"[A-Za-z0-9_.-]{1,64}")
@@ -101,7 +101,7 @@ def create_app(
         app.state.admin_lock = asyncio.Lock()
         yield
 
-    app = FastAPI(title="Aurorae Images API", version=__version__, lifespan=lifespan)
+    app = FastAPI(title="Synthwerk Vision API", version=__version__, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

@@ -14,17 +14,17 @@ COPY scripts ./scripts
 COPY README.md LICENSE ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev \
  && mkdir -p models && .venv/bin/python scripts/fetch_model.py "$BACKEND" \
- && AURORAE_BACKEND="$BACKEND" .venv/bin/python scripts/warm_label_cache.py
+ && SYNTHWERK_BACKEND="$BACKEND" .venv/bin/python scripts/warm_label_cache.py
 
 FROM python:3.12-slim
 ARG BACKEND
 RUN useradd --system --uid 10001 --home /app app
 WORKDIR /app
 COPY --from=build --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 AURORAE_UPLOAD_DIR=/data/uploads AURORAE_DATA_DIR=/data/state \
-    AURORAE_BACKEND=$BACKEND
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 SYNTHWERK_UPLOAD_DIR=/data/uploads SYNTHWERK_DATA_DIR=/data/state \
+    SYNTHWERK_BACKEND=$BACKEND
 RUN mkdir -p /data/uploads /data/state && chown app:app /data/uploads /data/state
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
-CMD ["uvicorn", "aurorae_images.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+CMD ["uvicorn", "synthwerk_vision.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

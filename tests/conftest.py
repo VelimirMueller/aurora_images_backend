@@ -10,9 +10,9 @@ import yaml
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from aurorae_images.config import Settings, get_settings
-from aurorae_images.main import create_app
-from aurorae_images.storage import LocalImageStorage
+from synthwerk_vision.config import Settings, get_settings
+from synthwerk_vision.main import create_app
+from synthwerk_vision.storage import LocalImageStorage
 
 # A tiny tree whose roll-ups can be checked by hand:
 #   animal ─ mammal ─ dog: beagle (0), husky (1)      vehicle ─ bicycle: mountain bike (3)

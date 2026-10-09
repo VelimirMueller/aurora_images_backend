@@ -2,7 +2,7 @@
 
 Prints a markdown report, writes eval/reports/<model>.json, and exits 1 when root-topic
 accuracy is below --min-topic-accuracy or fewer than 90 % of the images are available.
-Uses the same AURORAE_* settings as the server (e.g. AURORAE_BACKEND=mobilenet).
+Uses the same SYNTHWERK_* settings as the server (e.g. SYNTHWERK_BACKEND=mobilenet).
 
 Usage: uv run python scripts/evaluate.py [--min-topic-accuracy 0.8]
 """
@@ -12,9 +12,9 @@ import json
 import sys
 from pathlib import Path
 
-from aurorae_images.config import get_settings
-from aurorae_images.evaluation import evaluate, load_manifest
-from aurorae_images.main import build_service
+from synthwerk_vision.config import get_settings
+from synthwerk_vision.evaluation import evaluate, load_manifest
+from synthwerk_vision.main import build_service
 
 ROOT = Path(__file__).resolve().parent.parent
 MIN_AVAILABLE = 0.9

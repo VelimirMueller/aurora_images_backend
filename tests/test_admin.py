@@ -10,10 +10,10 @@ from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw
 from pydantic import SecretStr
 
-from aurorae_images.config import Settings, get_settings
-from aurorae_images.main import create_app, runtime_labels
-from aurorae_images.storage import LocalImageStorage
-from aurorae_images.taxonomy import Taxonomy
+from synthwerk_vision.config import Settings, get_settings
+from synthwerk_vision.main import create_app, runtime_labels
+from synthwerk_vision.storage import LocalImageStorage
+from synthwerk_vision.taxonomy import Taxonomy
 
 TOKEN = "s3cret-admin-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
