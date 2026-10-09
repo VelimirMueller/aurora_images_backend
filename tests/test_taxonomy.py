@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 import yaml
 
-from aurorae_images.service import ClassificationService
-from aurorae_images.taxonomy import Taxonomy, TaxonomyError
+from synthwerk_vision.service import ClassificationService
+from synthwerk_vision.taxonomy import Taxonomy, TaxonomyError
 from tests.conftest import SMALL_TAXONOMY, FakeClassifier
 
 
@@ -118,7 +118,7 @@ def test_packaged_taxonomy_covers_imagenet() -> None:
 
 def test_packaged_taxonomy_file_is_valid_yaml() -> None:
     root = Path(__file__).resolve().parent.parent
-    document = yaml.safe_load((root / "src/aurorae_images/data/taxonomy.yaml").read_text())
+    document = yaml.safe_load((root / "src/synthwerk_vision/data/taxonomy.yaml").read_text())
 
     assert document["version"] == 1
 
@@ -158,8 +158,8 @@ def test_uncertainty_uses_the_unrounded_score() -> None:
 def test_broken_taxonomy_stops_startup(tmp_path: Path) -> None:
     from fastapi.testclient import TestClient
 
-    from aurorae_images.config import Settings
-    from aurorae_images.main import create_app
+    from synthwerk_vision.config import Settings
+    from synthwerk_vision.main import create_app
 
     broken = tmp_path / "broken.yaml"
     broken.write_text(yaml.safe_dump({"topics": [{"id": "a", "parent": "zzz"}], "labels": []}))

@@ -23,7 +23,7 @@ from nltk.corpus.reader.wordnet import Synset
 ROOT = Path(__file__).resolve().parent.parent
 CLASS_INDEX = ROOT / "models" / "imagenet_class_index.json"  # index -> [wnid, keras name]
 DISPLAY_NAMES = ROOT / "models" / "imagenet_classes.txt"  # index -> human-readable name
-DATA = ROOT / "src" / "aurorae_images" / "data"
+DATA = ROOT / "src" / "synthwerk_vision" / "data"
 
 # (topic id, parent topic id, WordNet anchors). Parents must be listed before children.
 TOPICS: list[tuple[str, str | None, list[str]]] = [

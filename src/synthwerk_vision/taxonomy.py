@@ -140,7 +140,7 @@ class _Source:
     def read(self) -> dict[str, Any]:
         try:
             if self.path is None:
-                text = resources.files("aurorae_images.data").joinpath(self.packaged).read_text()
+                text = resources.files("synthwerk_vision.data").joinpath(self.packaged).read_text()
             else:
                 text = self.path.read_text(encoding="utf-8")
             document = yaml.safe_load(text)

@@ -1,61 +1,105 @@
-name: CI
+# Thin caller of the synthwerk blueprint (S-E0-07) plus two local jobs the blueprint
+# does not cover: the real-model tests with the eval gate, and the container smoke test.
+# Required checks for the ruleset: "ci / required" (blueprint jobs) and "gate" (all jobs).
+name: ci
 
 on:
-  push:
-    branches: [main, dev]
   pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
-  check:
+  # Blueprint: ruff check + format, mypy strict, pytest (without model weights:
+  # the real-model tests skip there and run in the "model" job below).
+  ci:
+    permissions:
+      contents: read
+    uses: VelimirMueller/synthwerk-blueprint/.github/workflows/py-ci.yml@v1
+    with:
+      python-version: "3.12" # onnxruntime/tokenizers on 3.14: change list step 7
+
+  # Local: real SigLIP 2 + MobileNetV2 weights, full test suite, eval gate (>= 90 %).
+  model:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.11.30"
+          python-version: "3.12"
           enable-cache: true
       - run: uv sync --frozen
-      - name: Cache model
-        uses: actions/cache@v6
+      - name: Cache model weights
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: models
           key: models-${{ hashFiles('scripts/fetch_model.py') }}
-      - run: uv run python scripts/fetch_model.py
-      - run: uv run ruff format --check .
-      - run: uv run ruff check .
-      - run: uv run mypy
-      - run: uv run pytest
+      - run: uv run --frozen python scripts/fetch_model.py
+      - name: pytest (real-model tests included)
+        run: uv run --frozen pytest
       - name: Cache eval images
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: eval/images
           key: eval-images-${{ hashFiles('eval/manifest.yaml') }}
       - name: Eval gate (SigLIP root-topic accuracy >= 90 %)
         run: |
-          set -o pipefail  # default `bash -e` has no pipefail: tee would hide a failing gate
-          uv run python scripts/evaluate.py --min-topic-accuracy 0.9 | tee eval-report.md
+          uv run --frozen python scripts/evaluate.py --min-topic-accuracy 0.9 | tee eval-report.md
           cat eval-report.md >> "$GITHUB_STEP_SUMMARY"
       - name: Upload eval report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: eval-report
           path: eval/reports/
 
-  docker:
+  # Local: build the small MobileNet image and check that /health answers.
+  docker-smoke:
     runs-on: ubuntu-latest
-    needs: check
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - run: docker build --build-arg BACKEND=mobilenet -t aurorae-images:ci .
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker build --build-arg BACKEND=mobilenet -t synthwerk-vision:ci .
       - name: Smoke test container
         run: |
-          docker run -d --rm --name api -p 8000:8000 aurorae-images:ci
-          for i in $(seq 1 30); do curl -sf localhost:8000/health && exit 0; sleep 1; done
-          docker logs api; exit 1
+          docker run -d --rm --name api -p 8000:8000 synthwerk-vision:ci
+          for _ in $(seq 1 30); do curl -sf localhost:8000/health && exit 0; sleep 1; done
+          docker logs api
+          exit 1
+
+  # One check over the blueprint and the local jobs ("ci / required" covers the blueprint only).
+  gate:
+    if: always()
+    needs: [ci, model, docker-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: All jobs passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          for result in $RESULTS; do
+            [[ "$result" == "success" ]] || exit 1
+          done
