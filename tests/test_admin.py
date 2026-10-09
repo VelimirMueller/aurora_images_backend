@@ -38,7 +38,7 @@ class OpenFakeClassifier:
                 p[label.index] = 0.9
         return p / p.sum()
 
-    def for_taxonomy(self, taxonomy: Taxonomy) -> OpenFakeClassifier:
+    def for_taxonomy(self, taxonomy: Taxonomy) -> "OpenFakeClassifier":
         new = OpenFakeClassifier(taxonomy, self.favourite)
         new.relabels = self.relabels + 1
         return new

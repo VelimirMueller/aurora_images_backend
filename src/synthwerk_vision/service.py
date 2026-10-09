@@ -62,7 +62,7 @@ class ClassificationService:
     def supports_runtime_labels(self) -> bool:
         return callable(getattr(self.classifier, "for_taxonomy", None))
 
-    def with_taxonomy(self, taxonomy: Taxonomy) -> ClassificationService:
+    def with_taxonomy(self, taxonomy: Taxonomy) -> "ClassificationService":
         """A new service for a changed label set; self keeps serving until it is swapped out."""
         if not self.supports_runtime_labels:
             raise TaxonomyError(f"{self.model_name} has a fixed label set")
