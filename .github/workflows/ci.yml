@@ -27,7 +27,7 @@ jobs:
       contents: read
     uses: VelimirMueller/synthwerk-blueprint/.github/workflows/py-ci.yml@v1
     with:
-      python-version: "3.14"
+      python-version: "3.14" # 3.14 wheels verified 2026-10-09: onnxruntime 1.30, numpy, pillow, tokenizers (abi3)
 
   # Local: real SigLIP 2 + MobileNetV2 weights, full test suite, eval gate (>= 90 %).
   model:
