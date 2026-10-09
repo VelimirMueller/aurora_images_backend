@@ -67,7 +67,7 @@ def normalize(vectors: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
 class TextEncoder:
     """Tokenize prompts and embed them with the text tower, loaded on first use."""
 
-    def __init__(self, tokenizer: Tokenizer, session_factory: "SessionFactory") -> None:
+    def __init__(self, tokenizer: Tokenizer, session_factory: SessionFactory) -> None:
         self._tokenizer = tokenizer
         self._tokenizer.enable_truncation(_TEXT_LENGTH)
         self._pad_id = _token_id(tokenizer, "<pad>")
@@ -127,7 +127,7 @@ class LabelEmbeddingCache:
             return None
         try:
             embeddings = np.load(path, allow_pickle=False)
-        except (OSError, ValueError):
+        except OSError, ValueError:
             logger.warning("ignoring unreadable label cache %s", path)
             return None
         expected = (len(texts), width if width is not None else embeddings.shape[-1])
@@ -183,7 +183,7 @@ class SiglipClassifier:
     @classmethod
     def from_dir(
         cls, model_dir: Path, taxonomy: Taxonomy, cache_dir: Path, threads: int = 0
-    ) -> "SiglipClassifier":
+    ) -> SiglipClassifier:
         texts = label_texts(taxonomy)
         missing = [
             f for f in (VISION_FILE, TEXT_FILE, TOKENIZER_FILE) if not (model_dir / f).is_file()
@@ -213,7 +213,7 @@ class SiglipClassifier:
             cache.store(texts, embeddings)
         return cls(vision, embeddings, texts=texts, embed_texts=embed_texts, cache=cache)
 
-    def for_taxonomy(self, taxonomy: Taxonomy) -> "SiglipClassifier":
+    def for_taxonomy(self, taxonomy: Taxonomy) -> SiglipClassifier:
         """A classifier for a changed label set: known texts keep their embedding, only new
         texts go through the text tower. The image session is shared, self is unchanged."""
         texts = label_texts(taxonomy)

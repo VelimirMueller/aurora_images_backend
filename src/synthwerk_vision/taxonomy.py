@@ -50,7 +50,7 @@ class Taxonomy:
                 self._membership[row[topic_id], label.index] = 1.0
 
     @classmethod
-    def load(cls, path: Path | None = None, *, packaged: str = "taxonomy.yaml") -> "Taxonomy":
+    def load(cls, path: Path | None = None, *, packaged: str = "taxonomy.yaml") -> Taxonomy:
         """Load a taxonomy YAML file, or the packaged file named `packaged` when path is None.
 
         A file may `extends:` another one (`package:<name>` or a path relative to itself) and
@@ -150,7 +150,7 @@ class _Source:
             raise TaxonomyError(f"{self} must be a mapping with 'topics' and 'labels'")
         return document
 
-    def base(self, reference: object) -> "_Source":
+    def base(self, reference: object) -> _Source:
         if not isinstance(reference, str) or not reference:
             raise TaxonomyError(f"{self}: 'extends' must be a file name")
         if reference.startswith(_PACKAGE_PREFIX):

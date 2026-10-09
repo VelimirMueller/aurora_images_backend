@@ -96,7 +96,7 @@ class FakeResponse:
     def __init__(self, data: bytes) -> None:
         self.data = data
 
-    def __enter__(self) -> "FakeResponse":
+    def __enter__(self) -> FakeResponse:
         return self
 
     def __exit__(self, *args: object) -> None:

@@ -181,7 +181,7 @@ def same_picture(data: bytes, item: Item) -> bool:
         return False
     try:
         actual = dhash(data)
-    except (UnidentifiedImageError, OSError):
+    except UnidentifiedImageError, OSError:
         return False  # not even an image (truncated download, error page)
     return dhash_distance(actual, item.dhash) <= DHASH_MAX_DISTANCE
 
