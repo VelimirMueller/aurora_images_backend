@@ -40,7 +40,9 @@ packages = ["src/synthwerk_vision"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py314"
+# py313 on purpose: the py314 formatter drops the parentheses in `except (A, B):`
+# (PEP 758). That form reads like Python 2 `except A, B` and confuses readers.
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]

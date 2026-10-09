@@ -127,7 +127,7 @@ class LabelEmbeddingCache:
             return None
         try:
             embeddings = np.load(path, allow_pickle=False)
-        except OSError, ValueError:
+        except (OSError, ValueError):
             logger.warning("ignoring unreadable label cache %s", path)
             return None
         expected = (len(texts), width if width is not None else embeddings.shape[-1])
