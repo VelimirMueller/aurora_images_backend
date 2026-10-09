@@ -116,9 +116,9 @@ Spot checks on six Wikimedia Commons photos (2026-10-02); the real numbers are i
 |---|---|
 | `primary` | The most likely label, with the path from its root topic |
 | `topic` | The most likely root ("meta") topic, such as `animal`, `vehicle` or `building and structure` |
-| `labels` | Top-k labels (`SYNTHWERK_TOP_K`) |
-| `topics` | Every topic scoring at least `SYNTHWERK_TOPIC_MIN_SCORE`, best first |
-| `uncertain` | `true` when the root topic score is below `SYNTHWERK_UNCERTAIN_BELOW` |
+| `labels` | Top-k labels (`SYNTHWERK_VISION_TOP_K`) |
+| `topics` | Every topic scoring at least `SYNTHWERK_VISION_TOPIC_MIN_SCORE`, best first |
+| `uncertain` | `true` when the root topic score is below `SYNTHWERK_VISION_UNCERTAIN_BELOW` |
 | `correction` | An admin correction for this picture, or `null` (see [Runtime labels and corrections](#runtime-labels-and-corrections)) |
 
 Every response, errors included, carries an `X-Request-ID` header. A caller-supplied
@@ -146,7 +146,7 @@ labels:
 which is the easiest way to add labels: a few lines on top of the packaged tree.
 
 ```yaml
-# my-taxonomy.yaml, used with SYNTHWERK_TAXONOMY_PATH=my-taxonomy.yaml
+# my-taxonomy.yaml, used with SYNTHWERK_VISION_TAXONOMY_PATH=my-taxonomy.yaml
 extends: package:taxonomy_open.yaml
 topics:
   - {id: aurora photo, parent: sky}
@@ -165,7 +165,7 @@ mouse). Every label text must be unique, or two labels get the same embedding.
 `scripts/build_taxonomy.py` generates both files from WordNet: each ImageNet label goes
 under the topic whose WordNet anchor is its *closest* hypernym. Its `TOPICS`, `OVERRIDES`,
 `PROMPTS` and `OPEN_LABELS` tables are the source of truth: edit them and rerun. For your
-own deployment you can also edit a copy of the YAML and set `SYNTHWERK_TAXONOMY_PATH`. On startup the service checks the tree
+own deployment you can also edit a copy of the YAML and set `SYNTHWERK_VISION_TAXONOMY_PATH`. On startup the service checks the tree
 (unknown parents, cycles, duplicate ids, gaps in the indices, label count against the model's
 outputs) and refuses to start if it is broken. This holds even when the model is missing: a
 missing model is an ops state (503), while a broken taxonomy is a config bug.
@@ -174,14 +174,14 @@ If the model files are missing, the service still starts: `/health` reports
 
 ### Backends
 
-| `SYNTHWERK_BACKEND` | Model | Labels | Inference (CPU) | Weights |
+| `SYNTHWERK_VISION_BACKEND` | Model | Labels | Inference (CPU) | Weights |
 |---|---|---|---|---|
 | `siglip` (default) | SigLIP 2 base/16, 224 px, fp32 image and text towers | any text | ~30 ms | ~1.5 GB |
 | `mobilenet` | MobileNetV2-12 | 1000 ImageNet classes | ~5 ms | 14 MB |
 
 The build-time label cache covers the packaged taxonomy. With a custom
-`SYNTHWERK_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
-`SYNTHWERK_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
+`SYNTHWERK_VISION_TAXONOMY_PATH`, the first container start embeds its labels (seconds) into
+`SYNTHWERK_VISION_LABEL_CACHE_DIR`, so mount that directory as a volume to keep the cache across restarts.
 The text tower runs only when label texts change (a cache miss): about 9 s for 1068 labels
 with a ~3.2 GB memory peak (the fp32 Gemma vocabulary table alone is 786 MB), and then it is
 dropped. Docker images ship with the cache built, so containers never load it unless you use a
@@ -200,7 +200,7 @@ Both towers are **fp32 on purpose**:
 ## Runtime labels and corrections
 
 Two admin endpoints change what the server knows while it runs. They need
-`Authorization: Bearer $SYNTHWERK_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
+`Authorization: Bearer $SYNTHWERK_VISION_ADMIN_TOKEN` and **do not exist (404) when no token is set**.
 
 | Method | Path | Does |
 |---|---|---|
@@ -210,7 +210,7 @@ Two admin endpoints change what the server knows while it runs. They need
 | `POST` | `/v1/feedback` | `image` + `label_id`: the correct label for this picture |
 
 ```bash
-curl -H "Authorization: Bearer $SYNTHWERK_ADMIN_TOKEN" -H 'content-type: application/json' \
+curl -H "Authorization: Bearer $SYNTHWERK_VISION_ADMIN_TOKEN" -H 'content-type: application/json' \
   -d '{"name": "rice paddy", "topic": "landscape", "prompt": "a green rice paddy field"}' \
   http://localhost:8000/v1/labels
 ```
@@ -220,10 +220,10 @@ curl -H "Authorization: Bearer $SYNTHWERK_ADMIN_TOKEN" -H 'content-type: applica
   is dropped afterwards. The running service keeps answering meanwhile. The new service is
   built completely and then swapped in with one assignment, so no request sees a half-updated
   model.
-- **Persistence.** Runtime labels live in `$SYNTHWERK_DATA_DIR/labels.yaml`, an ordinary taxonomy
+- **Persistence.** Runtime labels live in `$SYNTHWERK_VISION_DATA_DIR/labels.yaml`, an ordinary taxonomy
   file that `extends` the configured base. It survives restarts and can be reviewed and edited.
   A change is staged and validated first; a failed change leaves file and service as they were.
-- **Corrections** are stored in `$SYNTHWERK_DATA_DIR/feedback.sqlite3`, keyed by the picture's
+- **Corrections** are stored in `$SYNTHWERK_VISION_DATA_DIR/feedback.sqlite3`, keyed by the picture's
   difference hash. When the same picture comes back (re-encoded or resized), the response
   carries `correction` next to the unchanged model output. Clients should prefer it.
   Different photos are never affected. Semantic embeddings cannot do this safely: on the eval
@@ -252,7 +252,7 @@ report is in the job summary.
 
 ```bash
 uv run python scripts/evaluate.py                         # siglip
-SYNTHWERK_BACKEND=mobilenet uv run python scripts/evaluate.py
+SYNTHWERK_VISION_BACKEND=mobilenet uv run python scripts/evaluate.py
 ```
 
 What the misses show:
@@ -277,28 +277,29 @@ unavailable. The fix is then to rebuild the set: `scripts/build_eval_manifest.py
 
 ## Configuration
 
-- All settings are environment variables with the prefix `SYNTHWERK_`. See [`.env.example`](.env.example).
+- All settings are environment variables with the prefix `SYNTHWERK_VISION_`. See [`.env.example`](.env.example).
 - **The old prefixes `AURORAE_` and `AURORA_` are ignored.** Rename them in every `.env` and deployment.
+- A bare `SYNTHWERK_` prefix (without `VISION_`) is also ignored. Each Synthwerk service has its own prefix.
 - The service does not warn about old names. It uses the default value instead.
-- Names only. Secret values (`SYNTHWERK_ADMIN_TOKEN`) live in the environment, never in the repo.
+- Names only. Secret values (`SYNTHWERK_VISION_ADMIN_TOKEN`) live in the environment, never in the repo.
 
 | Variable                     | Default                                        |
 |------------------------------|------------------------------------------------|
-| `SYNTHWERK_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
-| `SYNTHWERK_UPLOAD_DIR`       | `uploads`                                      |
-| `SYNTHWERK_DATA_DIR`         | `data` (runtime labels + corrections)          |
-| `SYNTHWERK_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
-| `SYNTHWERK_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
-| `SYNTHWERK_MAX_IMAGE_PIXELS` | `40000000`                                     |
-| `SYNTHWERK_BACKEND`          | `siglip` (or `mobilenet`)                      |
-| `SYNTHWERK_SIGLIP_DIR`       | `models/siglip2-base-patch16-224`              |
-| `SYNTHWERK_LABEL_CACHE_DIR`  | `models/label_cache`                           |
-| `SYNTHWERK_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
-| `SYNTHWERK_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
-| `SYNTHWERK_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
-| `SYNTHWERK_TOP_K`            | `5`                                            |
-| `SYNTHWERK_TOPIC_MIN_SCORE`  | `0.05`                                         |
-| `SYNTHWERK_UNCERTAIN_BELOW`  | `0.5`                                          |
+| `SYNTHWERK_VISION_CORS_ORIGINS`     | `["http://localhost:5173","http://localhost:8080"]` |
+| `SYNTHWERK_VISION_UPLOAD_DIR`       | `uploads`                                      |
+| `SYNTHWERK_VISION_DATA_DIR`         | `data` (runtime labels + corrections)          |
+| `SYNTHWERK_VISION_ADMIN_TOKEN`      | unset: admin endpoints disabled                |
+| `SYNTHWERK_VISION_MAX_UPLOAD_BYTES` | `5242880` (5 MiB)                              |
+| `SYNTHWERK_VISION_MAX_IMAGE_PIXELS` | `40000000`                                     |
+| `SYNTHWERK_VISION_BACKEND`          | `siglip` (or `mobilenet`)                      |
+| `SYNTHWERK_VISION_SIGLIP_DIR`       | `models/siglip2-base-patch16-224`              |
+| `SYNTHWERK_VISION_LABEL_CACHE_DIR`  | `models/label_cache`                           |
+| `SYNTHWERK_VISION_MODEL_PATH`       | `models/mobilenetv2-12.onnx` (mobilenet)       |
+| `SYNTHWERK_VISION_TAXONOMY_PATH`    | unset (packaged taxonomy for the backend)      |
+| `SYNTHWERK_VISION_ORT_THREADS`      | `0` (ONNX Runtime default; spin-waiting is off) |
+| `SYNTHWERK_VISION_TOP_K`            | `5`                                            |
+| `SYNTHWERK_VISION_TOPIC_MIN_SCORE`  | `0.05`                                         |
+| `SYNTHWERK_VISION_UNCERTAIN_BELOW`  | `0.5`                                          |
 
 ## Development
 
@@ -317,7 +318,7 @@ src/synthwerk_vision/
   service.py      classifier + taxonomy -> labels, topics, uncertainty, timings
   evaluation.py   manifest loading, cached downloads, metrics, markdown/JSON reports
   data/taxonomy_open.yaml, data/taxonomy.yaml
-  config.py       pydantic-settings (prefix SYNTHWERK_)
+  config.py       pydantic-settings (prefix SYNTHWERK_VISION_)
 scripts/fetch_model.py           pinned model download
 scripts/build_taxonomy.py        regenerate both taxonomies from WordNet (dev only)
 scripts/warm_label_cache.py      embed label texts ahead of time (Docker build)
@@ -395,7 +396,7 @@ here with its source and license before it is used.
   and files open with `O_EXCL`, so an upload can never overwrite an existing file.
 - CORS allows only the configured origins, without credentials.
 - Endpoints that change server state (`/v1/labels`, `/v1/feedback`) need a bearer token
-  (`SYNTHWERK_ADMIN_TOKEN`, compared in constant time) and are absent without one.
+  (`SYNTHWERK_VISION_ADMIN_TOKEN`, compared in constant time) and are absent without one.
 - Classification and uploads are unauthenticated. Put the service behind a gateway with auth
   and rate limits before you expose it publicly.
 - Report a vulnerability through a private GitHub security advisory on this repo.

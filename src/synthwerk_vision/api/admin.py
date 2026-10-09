@@ -1,9 +1,9 @@
 """Endpoints that change what the server knows: runtime labels and corrections.
 
-They need `Authorization: Bearer <SYNTHWERK_ADMIN_TOKEN>` and do not exist (404) when no token is
-configured. A label change builds a complete new service next to the running one and swaps it
-in with one assignment, so in-flight requests finish on the old service and none sees a
-half-updated model.
+They need `Authorization: Bearer <SYNTHWERK_VISION_ADMIN_TOKEN>` and do not exist (404) when
+no token is configured. A label change builds a complete new service next to the running one
+and swaps it in with one assignment, so in-flight requests finish on the old service and none
+sees a half-updated model.
 """
 
 import hashlib

@@ -42,11 +42,11 @@ updated: 2026-10-09
 | Rule | Value |
 |---|---|
 | Image formats | JPEG, PNG, WebP (from the decoded bytes, not from `Content-Type`) |
-| Maximum upload size | 5 MiB (`SYNTHWERK_MAX_UPLOAD_BYTES`) |
-| Maximum pixel count | 40 000 000 (`SYNTHWERK_MAX_IMAGE_PIXELS`) |
-| Labels in the response | 5 (`SYNTHWERK_TOP_K`, 1 to 20) |
-| Minimum topic score in `topics` | 0.05 (`SYNTHWERK_TOPIC_MIN_SCORE`) |
-| `uncertain` limit | root topic score below 0.5 (`SYNTHWERK_UNCERTAIN_BELOW`) |
+| Maximum upload size | 5 MiB (`SYNTHWERK_VISION_MAX_UPLOAD_BYTES`) |
+| Maximum pixel count | 40 000 000 (`SYNTHWERK_VISION_MAX_IMAGE_PIXELS`) |
+| Labels in the response | 5 (`SYNTHWERK_VISION_TOP_K`, 1 to 20) |
+| Minimum topic score in `topics` | 0.05 (`SYNTHWERK_VISION_TOPIC_MIN_SCORE`) |
+| `uncertain` limit | root topic score below 0.5 (`SYNTHWERK_VISION_UNCERTAIN_BELOW`) |
 | Caller `X-Request-ID` | 1 to 64 characters of `[A-Za-z0-9_.-]`, else the service makes one |
 | Packaged labels | 1068 (SigLIP 2), 1000 (MobileNetV2) |
 
@@ -79,4 +79,4 @@ updated: 2026-10-09
 
 | Date | Change |
 |---|---|
-| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_`. |
+| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_VISION_`. |

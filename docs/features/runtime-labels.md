@@ -20,7 +20,7 @@ updated: 2026-10-09
 
 ## What it does
 
-- The service writes runtime labels to `$SYNTHWERK_DATA_DIR/labels.yaml`.
+- The service writes runtime labels to `$SYNTHWERK_VISION_DATA_DIR/labels.yaml`.
 - This file `extends` the configured base taxonomy, so it survives a restart.
 - The service stages and validates each change first. A failed change changes nothing.
 - The service builds the new model state completely, then swaps it in with one assignment.
@@ -29,7 +29,7 @@ updated: 2026-10-09
 
 ## How to use
 
-1. Set `SYNTHWERK_ADMIN_TOKEN`. Without it, the admin endpoints do not exist.
+1. Set `SYNTHWERK_VISION_ADMIN_TOKEN`. Without it, the admin endpoints do not exist.
 2. Send `Authorization: Bearer <token>` with each admin request.
 3. Send `POST /v1/labels` with `{"name", "topic", "prompt"?, "new_topic"?, "topic_parent"?}`.
 4. Send `DELETE /v1/labels/{label_id}` to remove a runtime label.
@@ -69,4 +69,4 @@ updated: 2026-10-09
 
 | Date | Change |
 |---|---|
-| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_`. |
+| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_VISION_`. |

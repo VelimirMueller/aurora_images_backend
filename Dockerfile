@@ -14,15 +14,15 @@ COPY scripts ./scripts
 COPY README.md LICENSE ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev \
  && mkdir -p models && .venv/bin/python scripts/fetch_model.py "$BACKEND" \
- && SYNTHWERK_BACKEND="$BACKEND" .venv/bin/python scripts/warm_label_cache.py
+ && SYNTHWERK_VISION_BACKEND="$BACKEND" .venv/bin/python scripts/warm_label_cache.py
 
 FROM python:3.12-slim
 ARG BACKEND
 RUN useradd --system --uid 10001 --home /app app
 WORKDIR /app
 COPY --from=build --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 SYNTHWERK_UPLOAD_DIR=/data/uploads SYNTHWERK_DATA_DIR=/data/state \
-    SYNTHWERK_BACKEND=$BACKEND
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 SYNTHWERK_VISION_UPLOAD_DIR=/data/uploads SYNTHWERK_VISION_DATA_DIR=/data/state \
+    SYNTHWERK_VISION_BACKEND=$BACKEND
 RUN mkdir -p /data/uploads /data/state && chown app:app /data/uploads /data/state
 USER app
 EXPOSE 8000

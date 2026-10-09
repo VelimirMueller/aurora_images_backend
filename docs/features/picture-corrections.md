@@ -20,7 +20,7 @@ updated: 2026-10-09
 
 ## What it does
 
-- The service stores each correction in `$SYNTHWERK_DATA_DIR/feedback.sqlite3`.
+- The service stores each correction in `$SYNTHWERK_VISION_DATA_DIR/feedback.sqlite3`.
 - The key is the 64-bit difference hash (dHash) of the picture.
 - A resized or re-encoded copy of the picture matches the same correction.
 - The response keeps the model output and adds `correction` next to it.
@@ -28,7 +28,7 @@ updated: 2026-10-09
 
 ## How to use
 
-1. Set `SYNTHWERK_ADMIN_TOKEN` and send it as a bearer token.
+1. Set `SYNTHWERK_VISION_ADMIN_TOKEN` and send it as a bearer token.
 2. Send `POST /v1/feedback` with the field `image` and the form field `label_id`.
 3. Read `correction` in later classification responses. Prefer it to `primary` when it is set.
 
@@ -65,4 +65,4 @@ updated: 2026-10-09
 
 | Date | Change |
 |---|---|
-| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_`. |
+| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_VISION_`. |

@@ -1,6 +1,6 @@
 """Embed the configured taxonomy's labels now, so the server starts in under a second.
 
-Runs at Docker build time. Uses the same settings (SYNTHWERK_*) as the server.
+Runs at Docker build time. Uses the same settings (SYNTHWERK_VISION_*) as the server.
 Usage: uv run python scripts/warm_label_cache.py
 """
 

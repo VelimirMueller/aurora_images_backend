@@ -2,7 +2,7 @@
 
 Prints a markdown report, writes eval/reports/<model>.json, and exits 1 when root-topic
 accuracy is below --min-topic-accuracy or fewer than 90 % of the images are available.
-Uses the same SYNTHWERK_* settings as the server (e.g. SYNTHWERK_BACKEND=mobilenet).
+Uses the same SYNTHWERK_VISION_* settings as the server (e.g. SYNTHWERK_VISION_BACKEND=mobilenet).
 
 Usage: uv run python scripts/evaluate.py [--min-topic-accuracy 0.8]
 """

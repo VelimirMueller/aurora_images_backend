@@ -43,3 +43,13 @@ def test_old_brand_name_is_gone() -> None:
         if not any(path == file and marker in text for file, marker in ALLOWED)
     ]
     assert unexpected == []
+
+
+@pytest.mark.parametrize("prefix", ["SYNTHWERK_", "AURORAE_", "AURORA_"])
+def test_only_the_service_prefix_is_read(prefix: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    from synthwerk_vision.config import Settings
+
+    monkeypatch.setenv(f"{prefix}TOP_K", "3")
+    assert Settings(_env_file=None).top_k == 5  # type: ignore[call-arg]
+    monkeypatch.setenv("SYNTHWERK_VISION_TOP_K", "4")
+    assert Settings(_env_file=None).top_k == 4  # type: ignore[call-arg]

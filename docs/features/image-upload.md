@@ -34,9 +34,9 @@ updated: 2026-10-09
 
 | Rule | Value |
 |---|---|
-| Storage folder | `uploads` (`SYNTHWERK_UPLOAD_DIR`) |
+| Storage folder | `uploads` (`SYNTHWERK_VISION_UPLOAD_DIR`) |
 | Image formats | JPEG, PNG, WebP |
-| Maximum upload size | 5 MiB (`SYNTHWERK_MAX_UPLOAD_BYTES`) |
+| Maximum upload size | 5 MiB (`SYNTHWERK_VISION_MAX_UPLOAD_BYTES`) |
 | Read back by id | Not available |
 
 ## Events
@@ -63,4 +63,4 @@ updated: 2026-10-09
 
 | Date | Change |
 |---|---|
-| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_`. |
+| 2026-10-09 | Rename to `synthwerk_vision`. The settings use the prefix `SYNTHWERK_VISION_`. |

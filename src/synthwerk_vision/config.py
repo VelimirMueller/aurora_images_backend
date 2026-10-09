@@ -7,9 +7,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration, read from environment variables prefixed with SYNTHWERK_."""
+    """Runtime configuration, read from environment variables prefixed with SYNTHWERK_VISION_."""
 
-    model_config = SettingsConfigDict(env_prefix="SYNTHWERK_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="SYNTHWERK_VISION_", env_file=".env", extra="ignore"
+    )
 
     cors_origins: list[str] = Field(
         default=["http://localhost:5173", "http://localhost:8080"],
