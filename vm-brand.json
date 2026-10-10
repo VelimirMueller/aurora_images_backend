@@ -1,0 +1,7 @@
+{
+  "group": "flagship",
+  "tagline": "It names a picture in 35 milliseconds. No cloud, no training.",
+  "sublabel": "FASTAPI · ONNX · SIGLIP 2",
+  "bannerVersion": "v2",
+  "art": {"file": "v2/synthwerk-vision.png", "seed": 313}
+}

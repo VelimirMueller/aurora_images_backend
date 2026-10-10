@@ -1,0 +1,17 @@
+{
+  "divider-what-v2.svg": "01 WHAT IT DOES. A PICTURE IN. A LABEL OUT.",
+  "divider-start-v2.svg": "02 QUICK START. COPY. PASTE. CLASSIFY.",
+  "divider-how-v2.svg": "03 HOW IT WORKS. BOXES AND ARROWS, AS PROMISED.",
+  "divider-usage-v2.svg": "04 USAGE. THE REFERENCE. CONDENSED.",
+  "divider-status-v2.svg": "05 STATUS. HONEST NUMBERS ONLY.",
+  "stats-v2-dark.svg": "93.1 % ROOT-TOPIC ACCURACY. 58 FROZEN EVAL PHOTOS. 35 ms PER IMAGE, CPU. 0 EXTERNAL API CALLS",
+  "stats-v2-light.svg": "93.1 % ROOT-TOPIC ACCURACY. 58 FROZEN EVAL PHOTOS. 35 ms PER IMAGE, CPU. 0 EXTERNAL API CALLS",
+  "features-v2-dark.svg": "OPEN VOCABULARY: A label is a text, so a new label needs no training. One more embedding, nothing else. TOPIC TREE: Every label has a place: hut -> building -> building and structure. RUNS ON CPU: ONNX Runtime, about 35 ms per image on an M-series Mac. No GPU, no external API",
+  "features-v2-light.svg": "OPEN VOCABULARY: A label is a text, so a new label needs no training. One more embedding, nothing else. TOPIC TREE: Every label has a place: hut -> building -> building and structure. RUNS ON CPU: ONNX Runtime, about 35 ms per image on an M-series Mac. No GPU, no external API",
+  "start-v2-dark.svg": "Terminal: $ uv sync | $ uv run python scripts/fetch_model.py | $ uv run uvicorn synthwerk_vision.main:create_app --factory --reload | # open http://localhost:8000/docs | $ curl -F \"image=@hut.jpg\" http://localhost:8000/v1/classifications",
+  "start-v2-light.svg": "Terminal: $ uv sync | $ uv run python scripts/fetch_model.py | $ uv run uvicorn synthwerk_vision.main:create_app --factory --reload | # open http://localhost:8000/docs | $ curl -F \"image=@hut.jpg\" http://localhost:8000/v1/classifications",
+  "flow-v2-dark.svg": "IMAGE -> MODEL -> TAXONOMY -> RESPONSE. The model scores every label. The taxonomy sums the scores into a topic path.",
+  "flow-v2-light.svg": "IMAGE -> MODEL -> TAXONOMY -> RESPONSE. The model scores every label. The taxonomy sums the scores into a topic path.",
+  "status-v2-dark.svg": "Image classification: stable. Classification eval gate: stable. Image upload: beta. Runtime labels: beta. Picture corrections: beta. Deployment: none yet",
+  "status-v2-light.svg": "Image classification: stable. Classification eval gate: stable. Image upload: beta. Runtime labels: beta. Picture corrections: beta. Deployment: none yet"
+}
