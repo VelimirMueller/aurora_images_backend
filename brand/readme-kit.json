@@ -1,0 +1,45 @@
+{
+  "group": "flagship",
+  "version": "v2",
+  "dividers": [
+    {"key": "what",   "index": "01", "title": "WHAT IT DOES", "caption": "A PICTURE IN. A LABEL OUT.", "art": "strip-flagship-1"},
+    {"key": "start",  "index": "02", "title": "QUICK START",  "caption": "COPY. PASTE. CLASSIFY.",         "art": "strip-flagship-2"},
+    {"key": "how",    "index": "03", "title": "HOW IT WORKS", "caption": "BOXES AND ARROWS, AS PROMISED.", "art": "strip-flagship-3"},
+    {"key": "usage",  "index": "04", "title": "USAGE",        "caption": "THE REFERENCE. CONDENSED.",      "art": "strip-flagship-4"},
+    {"key": "status", "index": "05", "title": "STATUS",       "caption": "HONEST NUMBERS ONLY.",           "art": "strip-flagship-5"}
+  ],
+  "panels": [
+    {"key": "stats", "type": "stats", "title": "THE NUMBERS", "items": [
+      {"value": "93.1 %", "label": "ROOT-TOPIC ACCURACY"},
+      {"value": "58", "label": "FROZEN EVAL PHOTOS"},
+      {"value": "35 ms", "label": "PER IMAGE, CPU"},
+      {"value": "0", "label": "EXTERNAL API CALLS"}
+    ]},
+    {"key": "features", "type": "cards", "title": "ONE IMAGE IN, ONE LABEL OUT", "items": [
+      {"title": "OPEN VOCABULARY", "text": "A label is a text, so a new label needs no training. One more embedding, nothing else."},
+      {"title": "TOPIC TREE", "text": "Every label has a place: hut -> building -> building and structure."},
+      {"title": "RUNS ON CPU", "text": "ONNX Runtime, about 35 ms per image on an M-series Mac. No GPU, no external API."}
+    ]},
+    {"key": "start", "type": "terminal", "title": "QUICK START", "lines": [
+      "$ uv sync",
+      "$ uv run python scripts/fetch_model.py",
+      "$ uv run uvicorn synthwerk_vision.main:create_app --factory --reload",
+      "# open http://localhost:8000/docs",
+      "$ curl -F \"image=@hut.jpg\" http://localhost:8000/v1/classifications"
+    ]},
+    {"key": "flow", "type": "flow", "title": "ONE IMAGE, LEFT TO RIGHT", "nodes": [
+      {"title": "IMAGE", "sub": "jpg, png, webp"},
+      {"title": "MODEL", "sub": "SigLIP 2 / MobileNetV2", "hot": true},
+      {"title": "TAXONOMY", "sub": "topic tree, roll-up"},
+      {"title": "RESPONSE", "sub": "label + topic path"}
+    ], "caption": "The model scores every label. The taxonomy sums the scores into a topic path."},
+    {"key": "status", "type": "status", "title": "WHAT WORKS TODAY", "rows": [
+      {"label": "Image classification", "value": "stable", "state": "ok"},
+      {"label": "Classification eval gate", "value": "stable", "state": "ok"},
+      {"label": "Image upload", "value": "beta", "state": "wip"},
+      {"label": "Runtime labels", "value": "beta", "state": "wip"},
+      {"label": "Picture corrections", "value": "beta", "state": "wip"},
+      {"label": "Deployment", "value": "none yet", "state": "planned"}
+    ]}
+  ]
+}
